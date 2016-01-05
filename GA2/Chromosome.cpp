@@ -4,6 +4,27 @@
 vector<char> Chromosome::defaultDistribution;
 vector<Node> Chromosome::_nodeList;
 
+
+vector<char> Chromosome::generateOptimalSolutionForAssignmentData(int size){
+	vector<char> sol(size, 0);
+
+	for (Node n : _nodeList){
+		if (n._y > 0.48){
+			sol[n._id] = 1;
+		} else if (n._y > 0.39 && n._x > 0.7){
+			sol[n._id] = 1;
+		}
+		if (n._x < 0.12 && n._y > 0.75 && n._y < 0.92){
+			sol[n._id] = 0;
+		}
+		if (n._x > 0.6 && n._x < 0.7 && n._y > 0.5 && n._y < 0.6){
+			sol[n._id] = 0;
+		}
+	}
+
+	return sol;
+}
+
 vector<char> Chromosome::generateRandomSolution(int size){
 	if (defaultDistribution.size() != size){
 		vector<char> defaultDistribution0(size / 2, 0);
@@ -20,6 +41,18 @@ vector<char> Chromosome::generateRandomSolution(int size){
 	random_shuffle(solution.begin(), solution.end());
 
 	return solution;
+}
+
+bool Chromosome::checkValidity(){
+	int count = 0;
+	for (int sol : _solution){
+		if (sol == 1) count++;
+		else if (sol != 0) throw new exception("Invalid value exception");
+	}
+
+	cout << count << endl;
+
+	return (count * 2) == _solution.size();
 }
 
 vector<Chromosome> Chromosome::GenerateRandomPopulation(int populationSize, int solutionSize){
@@ -57,15 +90,29 @@ int Chromosome::swapNodesOpt(){
 					localScoreJ = 2 * localScoreJ - _nodeList[j]._links.size();
 
 					int improvement = localScoreI + localScoreJ;
-					if (improvement > 0){
-						char tmp = _solution[i];
-						_solution[i] = _solution[j];
-						_solution[j] = tmp;
 
-						_score -= improvement;
-						improvementsCount++;
-						break;
+					//no improvement
+					if (improvement <= 0){
+						continue;
 					}
+
+					//check if the swapped nodes link to each other
+					if (find(_nodeList[i]._links.begin(), _nodeList[i]._links.end(), j) != _nodeList[i]._links.end()){
+						improvement -= 2;
+					}
+
+					//no improvement
+					if (improvement <= 0){
+						continue;
+					}
+
+					_solution[i] ^= 1;
+					_solution[j] ^= 1;
+
+					_score -= improvement;
+
+					improvementsCount++;
+					break;
 				}
 			}
 		}
@@ -73,27 +120,40 @@ int Chromosome::swapNodesOpt(){
 
 	} while (improvementFound);
 
+	int testScore = calcScore();
+	if (testScore != _score){
+		throw new exception("bad score exception");
+	}
+
 	return improvementsCount;
 }
 
-void Chromosome::updateScore(){
-	_score = 0;
+int Chromosome::calcScore(){
+	int score = 0;
 	for (Node n : _nodeList){
 		char myColor = _solution[n._id];
 		for (int meighbourId : n._links){
-			_score += (myColor != _solution[meighbourId]);
+			score += (myColor != _solution[meighbourId]);
 		}
 	}
+
+	if (score % 2) throw new exception("Score cannot be odd before division");
+
+	score /= 2;
+
+	return score;
 }
 
 //Chromosome::Chromosome(Chromosome c){
 //
 //}
 
-Chromosome::Chromosome(int size)
+Chromosome::Chromosome(int size, bool optimal)
 {
- 	_solution = generateRandomSolution(size);
-	updateScore();
+	if (optimal) _solution = generateOptimalSolutionForAssignmentData(size);
+ 	else _solution = generateRandomSolution(size);
+	
+	_score = calcScore();
 }
 
 

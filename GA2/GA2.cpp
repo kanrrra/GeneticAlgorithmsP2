@@ -16,6 +16,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	vector<Node> nodes = DataReader::GetData("data.txt");
 	Chromosome::_nodeList = nodes;
 
+	auto pop = Chromosome(nodes.size(), true);
+	cout << pop._score << " isValid: " << pop.checkValidity() << endl;
+
 	auto population = Chromosome::GenerateRandomPopulation(1000, nodes.size());
 	
 	int best = population[0]._score;
