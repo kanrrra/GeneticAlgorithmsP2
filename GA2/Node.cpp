@@ -1,4 +1,4 @@
-#include "stdafx.h"
+//#include "stdafx.h"
 #include "Node.h"
 
 
@@ -21,9 +21,16 @@ Node::Node(string inputData)
 	string x = string(location.begin(), commaPos);
 	string y = string(commaPos + 1, location.end());
 
+	//use of iss because of c++ bug making it impossible to use stof
+	istringstream coordxss(x);
+	coordxss >> _x;
+
+	istringstream coordyss(y);
+	coordyss >> _y;
+
 	//_position = PointF(stof(x), stof(y));
-	_x = stof(x);
-	_y = stof(y);
+	//_x = stof(x);
+	//_y = stof(y);
 
 	int link;
 	for (int i = 0; i < nofLinks; i++){

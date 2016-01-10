@@ -25,6 +25,7 @@ public:
 	static vector<Node> _nodeList;
 
 	int swapNodesOpt();
+	int mutate(double p);
 
 	Chromosome(int size, bool optimal = false);
 	~Chromosome();

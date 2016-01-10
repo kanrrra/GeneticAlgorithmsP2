@@ -1,5 +1,6 @@
-#include "stdafx.h"
+//#include "stdafx.h"
 #include "Chromosome.h"
+#include <stdexcept>
 
 vector<char> Chromosome::defaultDistribution;
 vector<Node> Chromosome::_nodeList;
@@ -47,10 +48,8 @@ bool Chromosome::checkValidity(){
 	int count = 0;
 	for (int sol : _solution){
 		if (sol == 1) count++;
-		else if (sol != 0) throw new exception("Invalid value exception");
+		else if (sol != 0) throw domain_error("Invalid value exception");
 	}
-
-	cout << count << endl;
 
 	return (count * 2) == _solution.size();
 }
@@ -64,6 +63,44 @@ vector<Chromosome> Chromosome::GenerateRandomPopulation(int populationSize, int 
 	}
 
 	return population;
+}
+
+int Chromosome::mutate(double p){
+	static geometric_distribution<int> dist(p);
+	static mt19937 generator;
+
+	uniform_int_distribution<int> bitPosDist(0, _solution.size() - 1);
+
+	unsigned int nofbitflips = dist(generator);
+	cout << "bitflips: " << nofbitflips << endl;
+
+	nofbitflips = min((unsigned int)_solution.size(), nofbitflips);
+
+	vector<int> indices(nofbitflips*2);
+	int counters[2] = { 0, 0 };
+
+	for (unsigned int i = 0; i < nofbitflips*2; i++){
+		while (true){
+			int pos = bitPosDist(generator);
+
+			int group = _solution[pos];
+			if (counters[group] >= nofbitflips) continue;
+
+			if (find(indices.begin(), indices.end(), pos) == indices.end()) {
+				indices[i] = pos;
+				counters[group]++;
+				break;
+			}
+		}
+
+		_solution[indices[i]] ^= 1;
+	}
+
+	int oldScore = _score;
+
+	_score = calcScore();
+
+	return oldScore - _score;
 }
 
 int Chromosome::swapNodesOpt(){
@@ -112,6 +149,7 @@ int Chromosome::swapNodesOpt(){
 					_score -= improvement;
 
 					improvementsCount++;
+					improvementFound = true;
 					break;
 				}
 			}
@@ -122,7 +160,7 @@ int Chromosome::swapNodesOpt(){
 
 	int testScore = calcScore();
 	if (testScore != _score){
-		throw new exception("bad score exception");
+		throw runtime_error("bad score exception");
 	}
 
 	return improvementsCount;
@@ -137,7 +175,7 @@ int Chromosome::calcScore(){
 		}
 	}
 
-	if (score % 2) throw new exception("Score cannot be odd before division");
+	if (score % 2) throw runtime_error("Score cannot be odd before division");
 
 	score /= 2;
 
