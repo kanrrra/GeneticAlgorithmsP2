@@ -11,7 +11,6 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-	cout << "hello world" << endl;
 
 	vector<Node> nodes = DataReader::GetData("data.txt");
 	Chromosome::_nodeList = nodes;
