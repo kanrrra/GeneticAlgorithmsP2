@@ -66,7 +66,7 @@ vector<Chromosome> Chromosome::GenerateRandomPopulation(int populationSize, int 
 }
 
 int Chromosome::mutate(double p){
-	static geometric_distribution<int> dist(p);
+	static geometric_distribution<int> dist(p); // todo: try different distributions and parameters -> report in the paper
 	static mt19937 generator;
 
 	uniform_int_distribution<int> bitPosDist(0, _solution.size() - 1);
@@ -105,7 +105,7 @@ int Chromosome::mutate(double p){
 
 int Chromosome::swapNodesOpt(){
 	int improvementsCount = 0;
-	bool improvementFound = false;
+	bool improvementFound;
 	do {
 		improvementFound = false;
 
