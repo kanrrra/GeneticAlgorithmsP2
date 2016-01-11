@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 
 				//add children to the parent population, both population and children are sorted so we can use merge with O(n+m) complexity
 				vector<Chromosome> combinedPop;
-				merge(population.begin(), population.end(), children.begin(), children.end(), combinedPop);
+				merge(population.begin(), population.end(), children.begin(), children.end(), combinedPop, [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
 
 				//get the best population.size() chromosomes
 				population = vector<Chromosome>(combinedPop.begin(), combinedPop.begin() + population.size());
