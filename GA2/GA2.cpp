@@ -5,12 +5,13 @@
 //#define _SCL_SECURE_NO_WARNINGS
 
 
-#include <iostream>
-#include <algorithm>
-#include <vector>
 
 #include "DataReader.h"
 #include "Chromosome.h"
+
+#include <iostream>
+#include <algorithm>
+#include <vector>
 
 
 using namespace std;
@@ -65,6 +66,9 @@ int main(int argc, char* argv[])
 
 	if (true) {
 		auto population = Chromosome::generateRandomPopulation(50, nodes.size());
+		for (int i = 0; i < population.size(); i++){
+			population[i].swapNodesOpt();
+		}
 
 		sort(population.begin(), population.end(), [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
 
@@ -82,7 +86,7 @@ int main(int argc, char* argv[])
 
 			int bestChildScore = numeric_limits<int>::max();
 			for (int i = 0; i < children.size(); i++){
-				children[i] = children[i].swapNodesOpt();
+				children[i].swapNodesOpt();
 				bestChildScore = min(bestChildScore, children[i]._score);
 			}
 
@@ -94,21 +98,13 @@ int main(int argc, char* argv[])
 
 				//add children to the parent population, both population and children are sorted so we can use merge with O(n+m) complexity
 				vector<Chromosome> combinedPop;
-				merge(population.begin(), population.end(), children.begin(), children.end(), combinedPop, [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
+				std::merge(population.begin(), population.end(), children.begin(), children.end(), combinedPop.begin(), [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
 
 				//get the best population.size() chromosomes
 				population = vector<Chromosome>(combinedPop.begin(), combinedPop.begin() + population.size());
-
-				//eletist selection
-				
-
-
-				// add children to population
-				// sort population
-				// truncate population
 			}
 			
-
+			cout << "best: " << population[0]._score << " worst: " << population[population.size() - 1]._score << endl;
 		} while (betterSolutionFound);
 
 	}

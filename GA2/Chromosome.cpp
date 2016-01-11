@@ -77,7 +77,7 @@ int Chromosome::mutate(double p){
 	nofbitflips = min((unsigned int)_solution.size(), nofbitflips);
 
 	vector<int> indices(nofbitflips*2);
-	int counters[2] = { 0, 0 };
+	unsigned int counters[2] = { 0, 0 };
 
 	for (unsigned int i = 0; i < nofbitflips*2; i++){
 		while (true){
@@ -181,10 +181,6 @@ int Chromosome::calcScore(){
 
 	return score;
 }
-
-//Chromosome::Chromosome(Chromosome c){
-//
-//}
 
 Chromosome::Chromosome(int size, bool optimal)
 {

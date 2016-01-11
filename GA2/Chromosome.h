@@ -30,7 +30,7 @@ public:
   	static vector<Chromosome> GAGenerateChildren(vector<Chromosome> parentsA, vector<Chromosome> parentsB);
   	static Chromosome GACrossOver(Chromosome parentA, Chromosome parentB);
 
-  int swapNodesOpt();
+	int swapNodesOpt();
 	int mutate(double p);
 
 	Chromosome(int size, bool optimal = false);
