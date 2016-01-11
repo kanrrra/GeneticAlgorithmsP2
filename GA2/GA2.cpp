@@ -1,15 +1,23 @@
 // GA2.cpp : Defines the entry point for the console application.
 //
 
-//#include "stdafx.h"
+//#pragma warning(disable:4996)
+//#define _SCL_SECURE_NO_WARNINGS
+
+
 #include <iostream>
+#include <algorithm>
+#include <vector>
 
 #include "DataReader.h"
 #include "Chromosome.h"
 
+
 using namespace std;
 
-
+const int nofRestarts = 1000;
+const bool runMultistart = false;
+const bool runIteratedLocalSearch = false;
 
 int main(int argc, char* argv[])
 {
@@ -17,11 +25,27 @@ int main(int argc, char* argv[])
 	vector<Node> nodes = DataReader::GetData("data.txt");
 	Chromosome::_nodeList = nodes;
 
-	auto pop = Chromosome(nodes.size(), true);
-	cout << "optimal soution of provided graph: " << pop._score << " isValid: " << pop.checkValidity() << endl;
+	auto optimalSolution = Chromosome(nodes.size(), true);
+	cout << "Optimal soution of provided graph: " << optimalSolution._score << " isValid: " << optimalSolution.checkValidity() << endl;
 
+	//multistart random initial solutions + local search
+	if (runMultistart) {
+		int best = numeric_limits<int>::max();
+		for (int i = 0; i < nofRestarts; i++){
+			auto solution = Chromosome(nodes.size());
 
-	if (false) {
+			int oldScore = solution._score;
+			int improvements = solution.swapNodesOpt();
+			cout << oldScore << " " << improvements << " : " << solution._score << endl;
+
+			if (solution._score < best) best = solution._score;
+		}
+		cout << "Multistart best solution score: " << best << endl;
+	}
+
+	//ILS
+	//TODO perturbation sizes
+	if (runIteratedLocalSearch) {
 		for (int i = 0; i < 1; i++){
 			Chromosome candidate = Chromosome(nodes.size());
 			candidate.swapNodesOpt();
@@ -37,41 +61,60 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	if (false) {
-		auto population = Chromosome::generateRandomPopulation(1000, nodes.size());
-
-		int best = population[0]._score;
-		for (auto pop : population){
-			int oldScore = pop._score;
-			int improvements = pop.swapNodesOpt();
-			cout << oldScore << " " << improvements << " : " << pop._score << endl;
-
-			if (pop._score < best) best = pop._score;
-		}
-		cout << "best: " << best << endl;
-	}
+	
 
 	if (true) {
 		auto population = Chromosome::generateRandomPopulation(50, nodes.size());
 
-		// tornament selection of parrents
+		sort(population.begin(), population.end(), [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
 
+		int worstPopulationScore = population[population.size() - 1]._score;
+
+		bool betterSolutionFound;
 		do {
+			betterSolutionFound = false;
 
+			// tornament selection of parrents
 			auto parentsA = Chromosome::GATournamentSelection(population, 2);
 			auto parentsB = Chromosome::GATournamentSelection(population, 2);
 
 			auto children = Chromosome::GAGenerateChildren(parentsA, parentsB);
-			// todo: local seachr on children
-			// check if child is better than worst parent
-			// add children to population
-			// sort population
-			// truncate population
 
-		} while (false);
+			int bestChildScore = numeric_limits<int>::max();
+			for (int i = 0; i < children.size(); i++){
+				children[i] = children[i].swapNodesOpt();
+				bestChildScore = min(bestChildScore, children[i]._score);
+			}
+
+			if (bestChildScore > worstPopulationScore){
+				betterSolutionFound = true;
+
+				//sort children
+				sort(children.begin(), children.end(), [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
+
+				//add children to the parent population, both population and children are sorted so we can use merge with O(n+m) complexity
+				vector<Chromosome> combinedPop;
+				merge(population.begin(), population.end(), children.begin(), children.end(), combinedPop);
+
+				//get the best population.size() chromosomes
+				population = vector<Chromosome>(combinedPop.begin(), combinedPop.begin() + population.size());
+
+				//eletist selection
+				
+
+
+				// add children to population
+				// sort population
+				// truncate population
+			}
+			
+
+		} while (betterSolutionFound);
 
 	}
 
+
+	cout << "done" << endl;
 	#ifdef _WIN64
 		cin.ignore();
     #endif
