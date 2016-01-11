@@ -21,10 +21,12 @@ public:
 	vector<char> generateOptimalSolutionForAssignmentData(int size);
 	bool checkValidity();
 
-	static vector<Chromosome> GenerateRandomPopulation(int populationSize, int solutionSize);
+	static vector<Chromosome> generateRandomPopulation(int populationSize, int solutionSize);
 	static vector<Node> _nodeList;
 
-	int swapNodesOpt();
+  	static vector<Chromosome> GATournamentSelection(vector<Chromosome>, int tournamentSize);
+
+  int swapNodesOpt();
 	int mutate(double p);
 
 	Chromosome(int size, bool optimal = false);

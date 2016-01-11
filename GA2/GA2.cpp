@@ -9,6 +9,8 @@
 
 using namespace std;
 
+
+
 int main(int argc, char* argv[])
 {
 
@@ -19,37 +21,47 @@ int main(int argc, char* argv[])
 	cout << "optimal soution of provided graph: " << pop._score << " isValid: " << pop.checkValidity() << endl;
 
 
-	for (int i = 0; i < 1; i++){
-		Chromosome candidate = Chromosome(nodes.size());
-		candidate.swapNodesOpt();
-
-		cout << "starting score: " << candidate._score << endl;
-		for (int attempts = 0; attempts < 10; attempts++){
-			candidate.mutate(0.1);
-			cout << "after mutation: " << candidate._score << endl;
+	if (false) {
+		for (int i = 0; i < 1; i++){
+			Chromosome candidate = Chromosome(nodes.size());
 			candidate.swapNodesOpt();
-			cout << "result score: " << candidate._score << " valid? " << candidate.checkValidity() << endl;
+
+			cout << "starting score: " << candidate._score << endl;
+			for (int attempts = 0; attempts < 10; attempts++){
+				candidate.mutate(0.1);
+				cout << "after mutation: " << candidate._score << endl;
+				candidate.swapNodesOpt();
+				cout << "result score: " << candidate._score << " valid? " << candidate.checkValidity() << endl;
+			}
+
 		}
+	}
+
+	if (false) {
+		auto population = Chromosome::generateRandomPopulation(1000, nodes.size());
+
+		int best = population[0]._score;
+		for (auto pop : population){
+			int oldScore = pop._score;
+			int improvements = pop.swapNodesOpt();
+			cout << oldScore << " " << improvements << " : " << pop._score << endl;
+
+			if (pop._score < best) best = pop._score;
+		}
+		cout << "best: " << best << endl;
+	}
+
+	if (true) {
+		auto population = Chromosome::generateRandomPopulation(50, nodes.size());
+
+		// tornament selection of parrents
 
 	}
 
+	#ifdef _WIN64
+		cin.ignore();
+    #endif
 
-	
-
-	auto population = Chromosome::GenerateRandomPopulation(1000, nodes.size());
-
-	int best = population[0]._score;
-	for (auto pop : population){
-		int oldScore = pop._score;
-		int improvements = pop.swapNodesOpt();
-		cout << oldScore << " " << improvements << " : " << pop._score << endl;
-
-		if (pop._score < best) best = pop._score;
-	}
-	cout << "best: " << best << endl;
-	
-	 
-	cin.ignore();
 	return 0;
 }
 

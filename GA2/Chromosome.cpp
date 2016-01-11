@@ -54,7 +54,7 @@ bool Chromosome::checkValidity(){
 	return (count * 2) == _solution.size();
 }
 
-vector<Chromosome> Chromosome::GenerateRandomPopulation(int populationSize, int solutionSize){
+vector<Chromosome> Chromosome::generateRandomPopulation(int populationSize, int solutionSize){
 	vector<Chromosome> population;
 	population.reserve(populationSize);
 
@@ -197,4 +197,8 @@ Chromosome::Chromosome(int size, bool optimal)
 
 Chromosome::~Chromosome()
 {
+}
+
+vector<Chromosome> Chromosome::GATournamentSelection(vector<Chromosome> vector1, int tournamentSize) {
+	return __1::vector<Chromosome>();
 }
