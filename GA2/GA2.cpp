@@ -77,6 +77,7 @@ int main(int argc, char* argv[])
 		bool betterSolutionFound;
 		do {
 			betterSolutionFound = false;
+			worstPopulationScore = population[population.size() - 1]._score;
 
 			// tornament selection of parrents
 			auto parentsA = Chromosome::GATournamentSelection(population, 2);
@@ -90,7 +91,7 @@ int main(int argc, char* argv[])
 				bestChildScore = min(bestChildScore, children[i]._score);
 			}
 
-			if (bestChildScore > worstPopulationScore){
+			if (bestChildScore < worstPopulationScore){
 				betterSolutionFound = true;
 
 				//sort children
@@ -98,7 +99,7 @@ int main(int argc, char* argv[])
 
 				//add children to the parent population, both population and children are sorted so we can use merge with O(n+m) complexity
 				vector<Chromosome> combinedPop;
-				std::merge(population.begin(), population.end(), children.begin(), children.end(), combinedPop.begin(), [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
+				std::merge(population.begin(), population.end(), children.begin(), children.end(), back_inserter(combinedPop), [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
 
 				//get the best population.size() chromosomes
 				population = vector<Chromosome>(combinedPop.begin(), combinedPop.begin() + population.size());
