@@ -56,6 +56,20 @@ int main(int argc, char* argv[])
 
 		// tornament selection of parrents
 
+		do {
+
+			auto parentsA = Chromosome::GATournamentSelection(population, 2);
+			auto parentsB = Chromosome::GATournamentSelection(population, 2);
+
+			auto children = Chromosome::GAGenerateChildren(parentsA, parentsB);
+			// todo: local seachr on children
+			// check if child is better than worst parent
+			// add children to population
+			// sort population
+			// truncate population
+
+		} while (false);
+
 	}
 
 	#ifdef _WIN64

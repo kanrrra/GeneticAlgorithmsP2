@@ -194,11 +194,98 @@ Chromosome::Chromosome(int size, bool optimal)
 	_score = calcScore();
 }
 
+Chromosome::Chromosome(vector<char> & solution)
+{
+	_solution = solution;
+	_score = calcScore();
+}
 
 Chromosome::~Chromosome()
 {
 }
 
-vector<Chromosome> Chromosome::GATournamentSelection(vector<Chromosome> vector1, int tournamentSize) {
-	return __1::vector<Chromosome>();
+vector<Chromosome> Chromosome::GATournamentSelection(vector<Chromosome> population, int tournamentSize, bool shufflePopulation) {
+	if (shufflePopulation)
+		random_shuffle(population.begin(), population.end());
+
+	int nofTournaments = population.size() / tournamentSize;
+	vector<Chromosome> selection;
+
+	for (int i = 0; i < nofTournaments; i++){
+
+		vector<Chromosome>::const_iterator start = population.begin() + i * tournamentSize;
+
+		auto maxMember = max_element(start, start + tournamentSize, [](const Chromosome &lhs, const Chromosome &rhs)
+		{
+		  return lhs._score < rhs._score;
+		});
+		selection.push_back(*maxMember);
+	}
+
+	return selection;
 }
+
+vector<Chromosome> Chromosome::GAGenerateChildren(vector<Chromosome> parentsA, vector<Chromosome> parentsB){
+	if (parentsA.size() != parentsB.size()) throw runtime_error("Parents don't have the same size");
+
+	vector<Chromosome> children;
+	children.reserve(parentsA.size());
+
+	for (unsigned int i = 0; i < parentsA.size(); i++){
+		children.push_back(GACrossOver(parentsA[i], parentsB[i]));
+	}
+
+	return children;
+}
+
+void Chromosome::invert() {
+	for (int i = 0; i < _solution.size(); ++i) {
+		_solution[i] ^= 1;
+	}
+}
+
+Chromosome Chromosome::GACrossOver(Chromosome parentA, Chromosome parentB) {
+	int size = parentA._solution.size();
+	int distance = 0;
+	for (int j = 0; j < size; ++j) {
+		distance += parentA._solution[j] != parentB._solution[j];
+	}
+	if (distance > size / 2) {
+		parentA.invert();
+	}
+
+	vector<char> childSolution(size);
+	int ones = 0, zeros = 0;
+	for (int i = 0; i < size; ++i) {
+		if (parentA._solution[i] == parentB._solution[i]) {
+			childSolution[i] = parentA._solution[i];
+			ones += parentA._solution[i];
+			zeros += parentA._solution[i] ^ 1;
+		}
+		else {
+			childSolution[i] = 2; // the placeholder
+		}
+	}
+
+	random_device rd;
+	mt19937 gen(rd());
+
+	int addOnes = (size / 2) - ones;
+	int addZeroes = (size / 2) - zeros;
+	for (int k = 0; k < size; ++k) {
+		if (childSolution[k] == 2) {
+			bernoulli_distribution d(addOnes / (addOnes + addZeroes));
+			char bit = d(gen);
+			if (bit) {
+				addOnes--;
+			}
+			else {
+				addZeroes--;
+			}
+			childSolution[k] = bit;
+		}
+	}
+
+	return Chromosome(childSolution);
+}
+
