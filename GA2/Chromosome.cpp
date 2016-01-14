@@ -78,6 +78,8 @@ int Chromosome::mutate(unsigned int perturbationSize){
 	//nofbitflips = min((unsigned int)_solution.size(), nofbitflips);
 
 	unsigned int nofbitflips = perturbationSize;
+	int oldScore = _score;
+
 
 	vector<int> indices(nofbitflips*2);
 	unsigned int counters[2] = { 0, 0 };
@@ -96,12 +98,12 @@ int Chromosome::mutate(unsigned int perturbationSize){
 			}
 		}
 
-		_solution[indices[i]] ^= 1;
+		flipNodeAtIdx(indices[i]);
+		//_solution[indices[i]] ^= 1;
 	}
 
-	int oldScore = _score;
 
-	_score = calcScore();
+	//_score = calcScore();
 
 	return oldScore - _score;
 }
@@ -153,14 +155,17 @@ int Chromosome::swapNodesOpt(){
 						continue;
 					}
 
-					_score -= improvement;
+					//_score -= improvement;
 
 					//swap nodes
 					//_solution[i] ^= 1;
 					//_solution[j] ^= 1;
 
+					//cout << "improvement: " << improvement << endl;
+
 					flipNodeAtIdx(i);
 					flipNodeAtIdx(j);
+
 
 					improvementsCount++;
 					improvementFound = true;
@@ -182,14 +187,21 @@ int Chromosome::swapNodesOpt(){
 
 void Chromosome::flipNodeAtIdx(int idx){
 	char myColor = _solution[idx];
+	int scoreChange = 0;
 	for (int n : _nodeList[idx]._links){
 		if (_solution[n] == myColor){
 			_scoreContribution[n]++;
+			scoreChange++;
 		}
 		else {
 			_scoreContribution[n]--;
+			scoreChange--;
 		}
 	}
+
+	//cout << "idx: " << idx << " " << scoreChange << endl;
+
+	_score += scoreChange;
 
 	_scoreContribution[idx] = _nodeList[idx]._links.size() - _scoreContribution[idx];
 	_solution[idx] ^= 1;

@@ -17,8 +17,10 @@
 
 using namespace std;
 
+const int nofExperiments = 30;
 const int nofRestarts = 1000;
-const bool runMultistart = false;
+const bool runMultistart = true;
+const bool runGA = false;
 const bool runIteratedLocalSearch = false;
 const int perturbationSize = 1;
 
@@ -40,17 +42,25 @@ int main(int argc, char* argv[])
 
 	//multistart random initial solutions + local search
 	if (runMultistart) {
-		int best = numeric_limits<int>::max();
-		for (int i = 0; i < nofRestarts; i++){
-			auto solution = Chromosome(nodes.size());
+		vector<clock_t> msTimes;
+		for (int experimentNo = 0; experimentNo < nofExperiments; experimentNo++){
+			std::clock_t ms_start = std::clock();
 
-			int oldScore = solution._score;
-			int improvements = solution.swapNodesOpt();
-			cout << oldScore << " " << improvements << " : " << solution._score << endl;
+			int best = numeric_limits<int>::max();
+			for (int i = 0; i < nofRestarts; i++){
+				auto solution = Chromosome(nodes.size());
 
-			if (solution._score < best) best = solution._score;
+				int oldScore = solution._score;
+				int improvements = solution.swapNodesOpt();
+
+				if (solution._score < best) best = solution._score;
+			}
+			std::clock_t ms_end = std::clock();
+			msTimes.push_back(1000.0 * (ms_end - ms_start) / CLOCKS_PER_SEC);
+
+			cout << "Multistart best solution score for experiment " << experimentNo << ": " << best << endl;
+			cout << "CPU time used: " << 1000.0 * (ms_end - ms_start) / CLOCKS_PER_SEC << " ms\n";
 		}
-		cout << "Multistart best solution score: " << best << endl;
 	}
 
 
@@ -81,7 +91,7 @@ int main(int argc, char* argv[])
 
 	}
 
-	if (true) {
+	if (runGA) {
 		//store optimal solution
 		ofstream GASolutionFile;
 		GASolutionFile.open("GASolution.txt");
