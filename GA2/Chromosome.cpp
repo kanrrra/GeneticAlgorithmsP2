@@ -177,10 +177,10 @@ int Chromosome::swapNodesOpt(){
 
 	} while (improvementFound);
 
-	int testScore = calcScore();
-	if (testScore != _score){
-		throw runtime_error("bad score exception");
-	}
+	//int testScore = calcScore();
+	//if (testScore != _score){
+	//	throw runtime_error("bad score exception");
+	//}
 
 	return improvementsCount;
 }
