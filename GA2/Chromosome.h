@@ -16,6 +16,7 @@ class Chromosome
 public:
 	int _score;
 	vector<char> _solution;
+	vector<char> _scoreContribution;
 
 	vector<char> generateRandomSolution(int size);
 	vector<char> generateOptimalSolutionForAssignmentData(int size);
@@ -30,12 +31,15 @@ public:
   	static vector<Chromosome> GAGenerateChildren(vector<Chromosome> parentsA, vector<Chromosome> parentsB);
   	static Chromosome GACrossOver(Chromosome parentA, Chromosome parentB);
 
+	void flipNodeAtIdx(int idx);
 	int swapNodesOpt();
-	int mutate(double p);
+	int mutate(unsigned int perturbationSize);
 
 	Chromosome(int size, bool optimal = false);
 	Chromosome(vector<char> & solution);
 	~Chromosome();
+
+	friend ostream& operator<< (ostream& out, const Chromosome& sol);
 
 
 private:

@@ -13,12 +13,14 @@
 #include <algorithm>
 #include <vector>
 
+#include <ctime>
 
 using namespace std;
 
 const int nofRestarts = 1000;
 const bool runMultistart = false;
 const bool runIteratedLocalSearch = false;
+const int perturbationSize = 1;
 
 int main(int argc, char* argv[])
 {
@@ -28,6 +30,13 @@ int main(int argc, char* argv[])
 
 	auto optimalSolution = Chromosome(nodes.size(), true);
 	cout << "Optimal soution of provided graph: " << optimalSolution._score << " isValid: " << optimalSolution.checkValidity() << endl;
+	
+	//store optimal solution
+	ofstream optimalSolutionFile;
+	optimalSolutionFile.open("optimalSolution.txt");
+	optimalSolutionFile << optimalSolution;
+	optimalSolutionFile.close();
+
 
 	//multistart random initial solutions + local search
 	if (runMultistart) {
@@ -44,28 +53,41 @@ int main(int argc, char* argv[])
 		cout << "Multistart best solution score: " << best << endl;
 	}
 
+
 	//ILS
 	//TODO perturbation sizes
 	if (runIteratedLocalSearch) {
-		for (int i = 0; i < 1; i++){
+		ofstream ILSsolution;
+		ILSsolution.open("ILSsolution.txt");
+		for (int i = 0; i < 10; i++){
 			Chromosome candidate = Chromosome(nodes.size());
 			candidate.swapNodesOpt();
 
+			int oldScore = candidate._score;
 			cout << "starting score: " << candidate._score << endl;
-			for (int attempts = 0; attempts < 10; attempts++){
-				candidate.mutate(0.1);
+			do {
+				oldScore = candidate._score;
+				candidate.mutate(i);
 				cout << "after mutation: " << candidate._score << endl;
 				candidate.swapNodesOpt();
 				cout << "result score: " << candidate._score << " valid? " << candidate.checkValidity() << endl;
-			}
+
+				ILSsolution << candidate << endl;
+
+			} while (candidate._score < oldScore);
 
 		}
+		ILSsolution.close();
+
 	}
 
-	
-
 	if (true) {
+		//store optimal solution
+		ofstream GASolutionFile;
+		GASolutionFile.open("GASolution.txt");
+
 		auto population = Chromosome::generateRandomPopulation(50, nodes.size());
+
 		for (int i = 0; i < population.size(); i++){
 			population[i].swapNodesOpt();
 		}
@@ -73,9 +95,11 @@ int main(int argc, char* argv[])
 		sort(population.begin(), population.end(), [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
 
 		int worstPopulationScore = population[population.size() - 1]._score;
+		int bestPopulationScore = population[0]._score;
 
 		bool betterSolutionFound;
 		do {
+			
 			betterSolutionFound = false;
 			worstPopulationScore = population[population.size() - 1]._score;
 
@@ -103,11 +127,17 @@ int main(int argc, char* argv[])
 
 				//get the best population.size() chromosomes
 				population = vector<Chromosome>(combinedPop.begin(), combinedPop.begin() + population.size());
+
+				if (population[0]._score < bestPopulationScore){
+					GASolutionFile << population[0] << endl;
+					bestPopulationScore = population[0]._score;
+				}
 			}
 			
 			cout << "best: " << population[0]._score << " worst: " << population[population.size() - 1]._score << endl;
 		} while (betterSolutionFound);
 
+		GASolutionFile.close();
 	}
 
 
@@ -118,4 +148,7 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
-
+//
+//std::clock_t c_start = std::clock();
+//std::clock_t c_end = std::clock();
+//cout << "CPU time used: " << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC << " ms\n";

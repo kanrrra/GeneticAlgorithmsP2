@@ -1,6 +1,7 @@
 //#include "stdafx.h"
 #include "Chromosome.h"
 #include <stdexcept>
+#include <numeric>
 
 vector<char> Chromosome::defaultDistribution;
 vector<Node> Chromosome::_nodeList;
@@ -65,16 +66,18 @@ vector<Chromosome> Chromosome::generateRandomPopulation(int populationSize, int 
 	return population;
 }
 
-int Chromosome::mutate(double p){
-	static geometric_distribution<int> dist(p); // todo: try different distributions and parameters -> report in the paper
+int Chromosome::mutate(unsigned int perturbationSize){
+	//static geometric_distribution<int> dist(p); // todo: try different distributions and parameters -> report in the paper
 	static mt19937 generator;
 
 	uniform_int_distribution<int> bitPosDist(0, _solution.size() - 1);
 
-	unsigned int nofbitflips = dist(generator);
-	cout << "bitflips: " << nofbitflips << endl;
+	//unsigned int nofbitflips = dist(generator);
+	//cout << "bitflips: " << nofbitflips << endl;
 
-	nofbitflips = min((unsigned int)_solution.size(), nofbitflips);
+	//nofbitflips = min((unsigned int)_solution.size(), nofbitflips);
+
+	unsigned int nofbitflips = perturbationSize;
 
 	vector<int> indices(nofbitflips*2);
 	unsigned int counters[2] = { 0, 0 };
@@ -112,18 +115,25 @@ int Chromosome::swapNodesOpt(){
 		for (int i = 0; i < _solution.size() - 1; i++){
 
 			int localScoreI = 0;
-			for (auto nb : _nodeList[i]._links){
-				localScoreI += (_solution[i] != _solution[nb]);
-			}
+			//for (auto nb : _nodeList[i]._links){
+			//	localScoreI += (_solution[i] != _solution[nb]);
+			//}
+			//cout << (int)_scoreContribution[i] << endl;
+
+
+			localScoreI = _scoreContribution[i];
 			localScoreI = 2 * localScoreI - _nodeList[i]._links.size();
+
 
 			for (int j = i + 1; j < _solution.size(); j++){
 				if (_solution[i] != _solution[j]){
 					
 					int localScoreJ = 0;
-					for (auto nb : _nodeList[j]._links){
-						localScoreJ += (_solution[j] != _solution[nb]);
-					}
+					//for (auto nb : _nodeList[j]._links){
+					//	localScoreJ += (_solution[j] != _solution[nb]);
+					//}
+
+					localScoreJ = _scoreContribution[j];
 					localScoreJ = 2 * localScoreJ - _nodeList[j]._links.size();
 
 					int improvement = localScoreI + localScoreJ;
@@ -143,10 +153,14 @@ int Chromosome::swapNodesOpt(){
 						continue;
 					}
 
-					_solution[i] ^= 1;
-					_solution[j] ^= 1;
-
 					_score -= improvement;
+
+					//swap nodes
+					//_solution[i] ^= 1;
+					//_solution[j] ^= 1;
+
+					flipNodeAtIdx(i);
+					flipNodeAtIdx(j);
 
 					improvementsCount++;
 					improvementFound = true;
@@ -166,14 +180,36 @@ int Chromosome::swapNodesOpt(){
 	return improvementsCount;
 }
 
-int Chromosome::calcScore(){
-	int score = 0;
-	for (Node n : _nodeList){
-		char myColor = _solution[n._id];
-		for (int meighbourId : n._links){
-			score += (myColor != _solution[meighbourId]);
+void Chromosome::flipNodeAtIdx(int idx){
+	char myColor = _solution[idx];
+	for (int n : _nodeList[idx]._links){
+		if (_solution[n] == myColor){
+			_scoreContribution[n]++;
+		}
+		else {
+			_scoreContribution[n]--;
 		}
 	}
+
+	_scoreContribution[idx] = _nodeList[idx]._links.size() - _scoreContribution[idx];
+	_solution[idx] ^= 1;
+}
+
+int Chromosome::calcScore(){
+	_scoreContribution.resize(_nodeList.size());
+
+	for (int i = 0; i < _nodeList.size(); i++){
+		Node n = _nodeList[i];
+
+		char myColor = _solution[n._id];
+		int localScore = 0;
+		for (int meighbourId : n._links){
+			localScore += (myColor != _solution[meighbourId]);
+		}
+		_scoreContribution[i] = localScore;
+	}
+
+	int score = accumulate(_scoreContribution.begin(), _scoreContribution.end(), 0);
 
 	if (score % 2) throw runtime_error("Score cannot be odd before division");
 
@@ -237,6 +273,8 @@ vector<Chromosome> Chromosome::GAGenerateChildren(vector<Chromosome> parentsA, v
 void Chromosome::invert() {
 	for (int i = 0; i < _solution.size(); ++i) {
 		_solution[i] ^= 1;
+
+		_scoreContribution[i] = _nodeList[i]._links.size() - _scoreContribution[i];
 	}
 }
 
@@ -285,3 +323,10 @@ Chromosome Chromosome::GACrossOver(Chromosome parentA, Chromosome parentB) {
 	return Chromosome(childSolution);
 }
 
+ostream& operator<< (ostream & out, const Chromosome &sol){
+	for (unsigned int i = 0; i < sol._solution.size(); i++){
+		out << (int)sol._solution[i] << ",";
+	}
+	out << " " << sol._score;
+	return out;
+}
