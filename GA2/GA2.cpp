@@ -14,13 +14,14 @@
 #include <vector>
 
 #include <ctime>
+#include <chrono>
 
 using namespace std;
 
 const int nofExperiments = 30;
 const int nofRestarts = 1000;
-const bool runMS = true;
-const bool runGA = true;
+const bool runMS = false;
+const bool runGA = false;
 const bool runILS = true;
 const int perturbationSize = 1;
 
@@ -32,8 +33,33 @@ enum SearchType {
 struct ExperimentResult {
   int bestScore;
   clock_t cpuTime;
-  clock_t wallTime;
+  chrono::milliseconds wallTime;
 };
+
+ExperimentResult summarizeExperiments(vector<ExperimentResult> exps){
+	ExperimentResult result;
+
+	result.cpuTime = 0;
+	result.wallTime = chrono::milliseconds::zero();
+	result.bestScore = 0;
+
+	for (auto exp : exps){
+		result.cpuTime += exp.cpuTime;
+		result.bestScore += exp.bestScore;
+		result.wallTime += exp.wallTime;
+	}
+
+	result.cpuTime /= exps.size();
+	result.wallTime /= exps.size();
+	result.bestScore /= exps.size();
+
+	return result;
+}
+
+ostream& operator << (std::ostream &o, const ExperimentResult & rhs){
+	o << rhs.bestScore << "," << rhs.cpuTime << "," << rhs.wallTime.count();
+	return o;
+}
 
 ExperimentResult multiStart(vector<Node> nodes) {
 	int best = numeric_limits<int>::max();
@@ -97,12 +123,11 @@ ExperimentResult gaSearch(vector<Node> nodes, int popSize) {
 			population = vector<Chromosome>(combinedPop.begin(), combinedPop.begin() + population.size());
 
 			if (population[0]._score < bestPopulationScore){
-//				GASolutionFile << population[0] << endl;
 				bestPopulationScore = population[0]._score;
 			}
 		}
 
-//		cout << "best: " << population[0]._score << " worst: " << population[population.size() - 1]._score << endl;
+		//cout << "best: " << population[0]._score << " worst: " << population[population.size() - 1]._score << endl;
 	} while (betterSolutionFound);
 
 //	GASolutionFile.close();
@@ -114,40 +139,54 @@ ExperimentResult gaSearch(vector<Node> nodes, int popSize) {
 ExperimentResult iterativeLocalSearch(vector<Node> nodes, int perturbationSize) {
 //	ofstream ILSsolution;
 //	ILSsolution.open("ILSsolution.txt");
+	int maxIterations = 50;
+	double maxDeviation = 1.2;
 
 	Chromosome candidate = Chromosome(nodes.size());
 	candidate.swapNodesOpt();
 
-	int oldScore = candidate._score;
-//	cout << "starting score: " << candidate._score << endl;
+	Chromosome bestSolution(candidate);
+
 	do {
-		oldScore = candidate._score;
 		candidate.mutate(perturbationSize);
-//		cout << "after mutation: " << candidate._score << endl;
 		candidate.swapNodesOpt();
-//		cout << "result score: " << candidate._score << " valid? " << candidate.checkValidity() << endl;
+
+		//cout << "perturbation size: " << perturbationSize << " best score: " << bestSolution._score << " candidate score: " << candidate._score << " maxIter: " << maxIterations << " valid? " << candidate.checkValidity() << endl;
+
+		if (candidate._score < bestSolution._score){
+			bestSolution = candidate;
+		}
+		else if (candidate._score > bestSolution._score * maxDeviation){
+			candidate = bestSolution;
+		}
 //		ILSsolution << candidate << endl;
 
-	} while (candidate._score < oldScore);
+		maxIterations--;
+	} while (maxIterations > 0);
 
 //	ILSsolution.close();
 	ExperimentResult result;
-	result.bestScore = candidate._score;
+	result.bestScore = bestSolution._score;
 	return result;
 }
 
-vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchType type, int p1 = 0) {
+vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchType type, int p1 = -1) {
 
 	vector<ExperimentResult> results;
 
 	for (int i = 0; i < count; ++i) {
 		std::clock_t ms_start = std::clock();
+		auto t1 = chrono::high_resolution_clock::now();
 		ExperimentResult result;
 		switch (type) {
 			case SearchType::MS:
 				result = multiStart(nodes);
 			break;
 			case SearchType::ILS:
+				if (p1 == -1){
+					throw runtime_error("ILS parameter cannot be negative!");
+				}
+
 				result = iterativeLocalSearch(nodes, p1);
 			break;
 			case SearchType::GA:
@@ -155,7 +194,10 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 			break;
 		}
 		std::clock_t ms_end = std::clock();
+		auto t2 = chrono::high_resolution_clock::now();
+
 		result.cpuTime = 1000.0 * (ms_end - ms_start) / CLOCKS_PER_SEC;
+		result.wallTime = chrono::duration_cast<chrono::milliseconds>(t2 - t1);
 		results.push_back(result);
 	}
 
@@ -173,9 +215,9 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 		break;
 	}
 
-	output << "score,cpu_time" << endl;
+	output << "score,cpu_time,wall_time" << endl;
 	for (auto result : results) {
-		output << result.bestScore << "," << result.cpuTime << endl;
+		output << result << endl;
 	}
 	output.close();
 	return results;
@@ -198,9 +240,14 @@ int main(int argc, char* argv[])
 
 	if (runMS) runExperiments(nodes, nofExperiments, SearchType::MS);
 	if (runILS) {
-		for (int i = 1; i < 100; i++) {
-			runExperiments(nodes, nofExperiments, SearchType::ILS, i);
+		ofstream output;
+		output.open(string("results/") + to_string(time(0)) + "_ILS_summary.csv");
+		output << "perturbation,score,cpu_time,wall_time" << endl;
+		for (int i = 2; i < 100; i++) {
+			auto results = runExperiments(nodes, nofExperiments, SearchType::ILS, i);
+			output << i << "," << summarizeExperiments(results) << endl;
 		}
+		output.close();
 	}
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 50);
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 100);
