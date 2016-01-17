@@ -42,7 +42,7 @@ public:
 	friend ostream& operator<< (ostream& out, const Chromosome& sol);
 
   	static Chromosome GRC();
-  	static vector<char> GRCsolution();
+  	static vector<char> GRCsolution(double badConnectionWeight = 0);
 
 
 private:
@@ -53,6 +53,8 @@ private:
   	struct Candidate {
 			int _id;
 			int _connections;
+			int _connectionsBad;
+			double _score;
 	};
 
 };

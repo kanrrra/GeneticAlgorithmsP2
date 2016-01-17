@@ -20,9 +20,9 @@ using namespace std;
 
 const int nofExperiments = 30;
 const int nofRestarts = 1000;
-const bool runMS = false;
+const bool runMS = true;
 const bool runGA = false;
-const bool runILS = true;
+const bool runILS = false;
 const int perturbationSize = 1;
 
 enum SearchType {
@@ -295,7 +295,6 @@ int main(int argc, char* argv[])
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 50);
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 100);
 
-	cout << "done" << endl;
 	#ifdef _WIN64
 		cin.ignore();
     #endif
