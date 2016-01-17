@@ -41,12 +41,43 @@ ExperimentResult multiStart(vector<Node> nodes) {
 		auto solution = Chromosome(nodes.size());
 
 		solution.swapNodesOpt();
+//		cout << solution._score << ", ";
 
 		if (solution._score < best) best = solution._score;
 	}
+//	cout << endl;
 	ExperimentResult result;
 	result.bestScore = best;
 	return result;
+}
+
+ExperimentResult dynamicPathRelinking(int truncate, int ESSize, int globalIter, int localIter, int dth) {
+	// - construct elite set (ES) with size b solutions
+	// - sort ES by score
+
+	for (int gi = 0; gi < globalIter; ++gi) { // or just set time limit
+		for (int li = 0; li < localIter; ++li) {
+			// - construct solution
+			// - local search
+			// - random select xj from ES
+			// - get best solution from PR
+			// - local search and save to y
+
+			// - if the solution is better than the best in ES replace it
+			// - elseif solution is better than the worst in ES and hamming distance is smaller than dth
+				// find the closest solution in ES (by hamming distance) to y such that score y._score is better
+				// replace them
+				// sort ES
+		}
+
+		// recombine ES (not needed)
+		// by PR till no new better solutions are found
+	}
+
+}
+
+Chromosome pathRelink(Chromosome a, Chromosome b) {
+
 }
 
 ExperimentResult gaSearch(vector<Node> nodes, int popSize) {
@@ -145,15 +176,19 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 		ExperimentResult result;
 		switch (type) {
 			case SearchType::MS:
+				cout << "running MS " << i << endl;
 				result = multiStart(nodes);
 			break;
 			case SearchType::ILS:
+				cout << "running ILS " << i << " and " << p1 << endl;
 				result = iterativeLocalSearch(nodes, p1);
 			break;
 			case SearchType::GA:
+				cout << "running GA " << i << " and " << p1 <<  endl;
 				result = gaSearch(nodes, p1);
 			break;
 		}
+		cout << "\tbest: " << result.bestScore << endl;
 		std::clock_t ms_end = std::clock();
 		result.cpuTime = 1000.0 * (ms_end - ms_start) / CLOCKS_PER_SEC;
 		results.push_back(result);
@@ -163,7 +198,7 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 	int timestamp = std::time(0);
 	switch (type) {
 		case SearchType::MS:
-			output.open(string("results/") + to_string(timestamp) + "_MS.csv");
+			output.open(string("results/") + to_string(timestamp) + "_MS1000.csv");
 		break;
 		case SearchType::ILS:
 			output.open(string("results/") + to_string(timestamp) + "_ILS" + to_string(p1) + ".csv");
@@ -184,12 +219,20 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 int main(int argc, char* argv[])
 {
 
+	srand (time(NULL));
+
 	vector<Node> nodes = DataReader::GetData("data.txt");
 	Chromosome::_nodeList = nodes;
 
+//	auto grcSolution = Chromosome::GRC();
+//	cout << grcSolution._score << " " << grcSolution.checkValidity() << endl;
+
+
+
+
 	auto optimalSolution = Chromosome(nodes.size(), true);
 	cout << "Optimal soution of provided graph: " << optimalSolution._score << " isValid: " << optimalSolution.checkValidity() << endl;
-	
+
 	//store optimal solution
 	ofstream optimalSolutionFile;
 	optimalSolutionFile.open("optimalSolution.txt");
@@ -197,13 +240,13 @@ int main(int argc, char* argv[])
 	optimalSolutionFile.close();
 
 	if (runMS) runExperiments(nodes, nofExperiments, SearchType::MS);
-	if (runILS) {
-		for (int i = 1; i < 100; i++) {
-			runExperiments(nodes, nofExperiments, SearchType::ILS, i);
-		}
-	}
-	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 50);
-	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 100);
+//	if (runILS) {
+//		for (int i = 1; i < 100; i++) {
+//			runExperiments(nodes, nofExperiments, SearchType::ILS, i);
+//		}
+//	}
+//	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 50);
+//	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 150);
 
 	cout << "done" << endl;
 	#ifdef _WIN64

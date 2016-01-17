@@ -2,6 +2,7 @@
 #include "Chromosome.h"
 #include <stdexcept>
 #include <numeric>
+#include <math.h>
 
 vector<char> Chromosome::defaultDistribution;
 vector<Node> Chromosome::_nodeList;
@@ -232,8 +233,10 @@ int Chromosome::calcScore(){
 
 Chromosome::Chromosome(int size, bool optimal)
 {
-	if (optimal) _solution = generateOptimalSolutionForAssignmentData(size);
- 	else _solution = generateRandomSolution(size);
+
+	_solution = Chromosome::GRCsolution();
+//	if (optimal) _solution = generateOptimalSolutionForAssignmentData(size);
+// 	else _solution = generateRandomSolution(size);
 	
 	_score = calcScore();
 }
@@ -341,4 +344,70 @@ ostream& operator<< (ostream & out, const Chromosome &sol){
 	}
 	out << " " << sol._score;
 	return out;
+}
+
+Chromosome Chromosome::GRC() {
+	auto solution = Chromosome::GRCsolution();
+	return Chromosome(solution);
+}
+
+vector<char> Chromosome::GRCsolution() {
+	int size = _nodeList.size();
+	vector<char> solution(size);
+	int firstPosition = rand() % size;
+	solution[firstPosition] = 1;
+
+	int selectedCount = 1;
+
+	while (selectedCount != size / 2) {
+		int toSelect = size - selectedCount;
+
+		vector<Candidate> candidates(toSelect);
+
+		int canId = 0; // candidate id for the array, may be faster than vectors
+		for (int i = 0; i < size; ++i) {
+			if (solution[i] == 0) {
+				int connections = 0;
+				for (auto link : _nodeList[i]._links) {
+					if (solution[link] == 1) {
+						connections++;
+					}
+				}
+
+				candidates[canId]._connections = connections;
+				candidates[canId]._id = i;
+
+				canId++;
+			}
+		}
+
+		sort(candidates.begin(), candidates.end(), [](const Candidate & a, const Candidate & b) {return a._connections > b._connections; });
+
+//		for (auto c : candidates) {
+//			cout << c._connections << " ";
+//		}
+//		cout << endl;
+
+		int lowestConnectionCount = candidates[0]._connections;
+		int partSize = 1;
+		while (lowestConnectionCount == candidates[partSize]._connections && partSize < toSelect) {
+			partSize++;
+		}
+		int addId = rand() % partSize;
+
+
+
+
+
+		solution[candidates[addId]._id] = 1;
+//		cout << candidates[addId]._id  << " " << candidates[addId]._connections << endl;
+		selectedCount++;
+	}
+//
+//	for (char c : solution) {
+//		cout << (int) c;
+//	}
+//	cout << endl;
+
+	return solution;
 }

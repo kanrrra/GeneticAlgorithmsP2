@@ -41,11 +41,19 @@ public:
 
 	friend ostream& operator<< (ostream& out, const Chromosome& sol);
 
+  	static Chromosome GRC();
+  	static vector<char> GRCsolution();
+
 
 private:
 	int calcScore();
 
 	static vector<char> defaultDistribution;
+
+  	struct Candidate {
+			int _id;
+			int _connections;
+	};
 
 };
 
