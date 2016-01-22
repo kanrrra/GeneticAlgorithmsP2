@@ -18,11 +18,11 @@
 
 using namespace std;
 
-const int nofExperiments = 30;
-const int nofRestarts = 1000;
-const bool runMS = false;
+const int nofExperiments = 1;
+const int nofRestarts = 30;
+const bool runMS = true;
 const bool runGA = false;
-const bool runILS = true;
+const bool runILS = false;
 const int perturbationSize = 1;
 
 enum SearchType {
@@ -62,15 +62,25 @@ ostream& operator << (std::ostream &o, const ExperimentResult & rhs){
 }
 
 ExperimentResult multiStart(vector<Node> nodes) {
+	ofstream GarrySolutionFile;
+	GarrySolutionFile.open("GarySolution_" + to_string(time(0)) + ".txt");
+
 	int best = numeric_limits<int>::max();
 	for (int i = 0; i < nofRestarts; i++){
 		auto solution = Chromosome(nodes.size());
 
+		GarrySolutionFile << solution << endl;
+
 		solution.swapNodesOpt();
 //		cout << solution._score << ", ";
 
+		GarrySolutionFile << solution << endl;
+
 		if (solution._score < best) best = solution._score;
 	}
+
+	GarrySolutionFile.close();
+
 //	cout << endl;
 	ExperimentResult result;
 	result.bestScore = best;
@@ -108,8 +118,8 @@ Chromosome pathRelink(Chromosome a, Chromosome b) {
 
 ExperimentResult gaSearch(vector<Node> nodes, int popSize) {
 	//store optimal solution
-//	ofstream GASolutionFile;
-//	GASolutionFile.open("GASolution.txt");
+	ofstream GASolutionFile;
+	GASolutionFile.open("GASolution_" + to_string(time(0)) + ".txt");
 
 	auto population = Chromosome::generateRandomPopulation(popSize, nodes.size());
 
@@ -118,6 +128,8 @@ ExperimentResult gaSearch(vector<Node> nodes, int popSize) {
 	}
 
 	sort(population.begin(), population.end(), [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
+
+	GASolutionFile << population[0] << endl;
 
 	int worstPopulationScore;
 	int bestPopulationScore = population[0]._score;
@@ -155,13 +167,14 @@ ExperimentResult gaSearch(vector<Node> nodes, int popSize) {
 
 			if (population[0]._score < bestPopulationScore){
 				bestPopulationScore = population[0]._score;
+				GASolutionFile << population[0] << endl;
 			}
 		}
 
 		//cout << "best: " << population[0]._score << " worst: " << population[population.size() - 1]._score << endl;
 	} while (betterSolutionFound);
 
-//	GASolutionFile.close();
+	GASolutionFile.close();
 	ExperimentResult result;
 	result.bestScore = bestPopulationScore;
 	return result;
@@ -255,24 +268,25 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 		output << result << endl;
 	}
 	output.close();
+
+
+
 	return results;
 }
 
 int main(int argc, char* argv[])
 {
-
 	srand (time(NULL));
 
 	vector<Node> nodes = DataReader::GetData("data.txt");
 	Chromosome::_nodeList = nodes;
 
+
 //	auto grcSolution = Chromosome::GRC();
 //	cout << grcSolution._score << " " << grcSolution.checkValidity() << endl;
 
 
-
-
-	auto optimalSolution = Chromosome(nodes.size(), true);
+	auto optimalSolution = Chromosome(nodes.size(), Chromosome::OPTIMAL);
 	cout << "Optimal soution of provided graph: " << optimalSolution._score << " isValid: " << optimalSolution.checkValidity() << endl;
 
 	//store optimal solution
@@ -309,3 +323,28 @@ int main(int argc, char* argv[])
 //std::clock_t c_start = std::clock();
 //std::clock_t c_end = std::clock();
 //cout << "CPU time used: " << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC << " ms\n";
+
+
+/*
+int nofTests = 10000;
+cout << "random:" << endl;
+clock_t c_start = std::clock();
+double count = 0;
+for (int i = 0; i < nofTests; i++){
+count += Chromosome(nodes.size(), Chromosome::RANDOM)._score;
+}
+std::clock_t end = std::clock();
+cout << "CPU time used: " << 1000.0 * (end - c_start) / CLOCKS_PER_SEC << " ms, avg score: " << count / nofTests << endl;
+
+cout << "greedy:" << endl;
+c_start = std::clock();
+count = 0;
+for (int i = 0; i < nofTests; i++){
+count += Chromosome(nodes.size(), Chromosome::GREEDY)._score;
+}
+end = std::clock();
+cout << "CPU time used: " << 1000.0 * (end - c_start) / CLOCKS_PER_SEC << " ms, avg score: " << count / nofTests << endl;
+
+cin.ignore();
+return 0;
+*/

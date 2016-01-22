@@ -14,6 +14,10 @@ using namespace std;
 class Chromosome
 {
 public:
+	enum GenerationType {
+		OPTIMAL, RANDOM, GREEDY
+	};
+
 	int _score;
 	vector<char> _solution;
 	vector<char> _scoreContribution;
@@ -35,7 +39,8 @@ public:
 	int swapNodesOpt();
 	int mutate(unsigned int perturbationSize);
 
-	Chromosome(int size, bool optimal = false);
+	Chromosome();
+	Chromosome(int size, GenerationType gt = GenerationType::GREEDY);
 	Chromosome(vector<char> & solution);
 	~Chromosome();
 
@@ -44,6 +49,7 @@ public:
   	static Chromosome GRC();
   	static vector<char> GRCsolution();
 
+	
 
 private:
 	int calcScore();

@@ -231,12 +231,21 @@ int Chromosome::calcScore(){
 	return score;
 }
 
-Chromosome::Chromosome(int size, bool optimal)
+Chromosome::Chromosome(int size, Chromosome::GenerationType gt)
 {
-
-	_solution = Chromosome::GRCsolution();
-//	if (optimal) _solution = generateOptimalSolutionForAssignmentData(size);
-// 	else _solution = generateRandomSolution(size);
+	switch (gt)
+	{
+	case Chromosome::OPTIMAL:
+		_solution = generateOptimalSolutionForAssignmentData(size);
+		break;
+	case Chromosome::RANDOM:
+		_solution = generateRandomSolution(size);
+		break;
+	case Chromosome::GREEDY:
+	default:
+		_solution = Chromosome::GRCsolution();
+		break;
+	}
 	
 	_score = calcScore();
 }
@@ -245,6 +254,10 @@ Chromosome::Chromosome(vector<char> & solution)
 {
 	_solution = solution;
 	_score = calcScore();
+}
+
+Chromosome::Chromosome(){
+	_score = -1;
 }
 
 Chromosome::~Chromosome()
@@ -357,9 +370,9 @@ vector<char> Chromosome::GRCsolution() {
 	int firstPosition = rand() % size;
 	solution[firstPosition] = 1;
 
-	int selectedCount = 1;
+	//int selectedCount = 1;
 
-	while (selectedCount != size / 2) {
+	for (int selectedCount = 1; selectedCount < size / 2; selectedCount++){
 		int toSelect = size - selectedCount;
 
 		vector<Candidate> candidates(toSelect);
@@ -397,11 +410,8 @@ vector<char> Chromosome::GRCsolution() {
 
 
 
-
-
 		solution[candidates[addId]._id] = 1;
 //		cout << candidates[addId]._id  << " " << candidates[addId]._connections << endl;
-		selectedCount++;
 	}
 //
 //	for (char c : solution) {
