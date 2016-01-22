@@ -179,11 +179,11 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 	for (int gi = 0; gi < globalIter; ++gi) { // or just set time limit
 		for (int li = 0; li < localIter; ++li) {
-//			cout << "iteration: " << gi << " / " << li << endl;
+			cout << "iteration: " << gi << " / " << li << endl;
 			// - construct solution
 			Chromosome x = Chromosome::GRC();
 			// - local search
-//			x.swapNodesOpt();
+			x.swapNodesOpt();
 			// - random select xj from ES
 			int j = rand() % ESSize;
 
@@ -225,9 +225,72 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 				}
 			}
 		}
+		/*
+		int map[ESSize][ESSize];
+		for (int k = 0; k < ESSize; ++k) {
+			for (int i = 0; i < ESSize; ++i) {
+				map[k][i] = 0;
+			}
+		}
 
-		// recombine ES (not needed)
-		// by PR till no new better solutions are found
+		bool newSol = true;
+		while (newSol) {
+			newSol = false;
+
+			for (int i = 0; i < ESSize; ++i) {
+				for (int j = 0; j < ESSize / 2; ++j) {
+
+					// not need to generate those that were generated before
+					if (map[i][j] == 1) {
+						continue;
+					}
+					else {
+						map[i][j] = 1;
+					}
+
+					cout << "combining " << i << " " << j << endl;
+
+					Chromosome y = pathRelink(es[i], es[j], truncate);
+					y.swapNodesOpt();
+
+					if (y._score < es[0]._score) { // - if the solution is better than the best in ES replace it
+						es[0] = y;
+						newSol = true;
+					}
+
+					else if (y._score < es[ESSize - 1]._score) { // - elseif solution is better than the worst in ES and hamming distance is smaller than dth
+						bool addToEs = true;
+						vector<int> distances(ESSize);
+						for (int i = 0; i < ESSize; ++i) {
+							distances[i] = Chromosome::distance(y, es[i]);
+							if (distances[i] <= dth) {
+								addToEs = false;
+								break;
+							}
+						}
+						if (addToEs) {
+							// find the closest solution in ES (by hamming distance) to y such that score y._score is better
+							int swapId;
+							int swapDistance = numeric_limits<int>::max();;
+							for (int i = 0; i < ESSize; ++i) {
+								if (y._score < es[i]._score) {
+									if (distances[i] < swapDistance) {
+										swapId = i;
+										swapDistance = distances[i];
+									}
+								}
+							}
+							// replace them
+							es[swapId] = y;
+							// sort ES
+							sort(es.begin(), es.end(), [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
+
+							newSol = true;
+						}
+					}
+				}
+			}
+		}*/
 	}
 
 //
@@ -384,7 +447,7 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 	int timestamp = std::time(0);
 	switch (type) {
 		case SearchType::MS:
-			output.open(string("results/") + to_string(timestamp) + "_MS1000.csv");
+			output.open(string("results/") + to_string(timestamp) + "_MS10000.csv");
 		break;
 		case SearchType::ILS:
 			output.open(string("results/") + to_string(timestamp) + "_ILS" + to_string(p1) + ".csv");
@@ -446,7 +509,7 @@ int main(int argc, char* argv[])
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 50);
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 100);
 
-	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 5, 50, 20);
+	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 4, 50, 10);
 
 	#ifdef _WIN64
 		cin.ignore();
