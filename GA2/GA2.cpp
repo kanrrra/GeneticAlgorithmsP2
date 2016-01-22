@@ -20,13 +20,14 @@ using namespace std;
 
 const int nofExperiments = 30;
 const int nofRestarts = 1000;
-const bool runMS = true;
+const bool runMS = false;
 const bool runGA = false;
 const bool runILS = false;
+const bool runPR = true;
 const int perturbationSize = 1;
 
 enum SearchType {
-  MS, ILS, GA
+  MS, ILS, GA, PR
 };
 
 
@@ -77,34 +78,142 @@ ExperimentResult multiStart(vector<Node> nodes) {
 	return result;
 }
 
-ExperimentResult dynamicPathRelinking(int truncate, int ESSize, int globalIter, int localIter, int dth) {
+Chromosome pathRelink(Chromosome a, Chromosome b, double truncate = 1) {
+
+//	cout << a << endl;
+//	cout << b << endl;
+
+	vector<Chromosome> steps;
+	steps.push_back(a);
+
+	int distance = Chromosome::distance(a, b);
+//	cout << "distance: " << distance << endl;
+//	cout << "steps: " << endl;
+
+
+	// we want to swap all mismatching bites
+	for (int k = 0; k < distance; ++k) {
+
+		// generate all swaps of one bit
+		vector<Chromosome> candidates;
+
+		for (int i = 0; i < a._solution.size(); ++i) {
+			if (steps.back()._solution[i] != b._solution[i]) {
+				Chromosome n(steps.back());
+				n.flipNodeAtIdx(i);
+				candidates.push_back(n);
+			}
+		}
+
+		int minScore = numeric_limits<int>::max();
+		int minId = 0;
+		for (int j = 0; j < candidates.size(); ++j) {
+			if (candidates[j]._score < minScore) {
+				minId = j;
+				minScore = candidates[j]._score;
+			}
+		}
+
+		// evaluate all
+	//	for (auto c : candidates) {
+	//		cout << c << endl;
+	//	}
+
+//		cout << candidates[minId] << endl;
+		steps.push_back(candidates[minId]);
+	}
+
+	int minScore = numeric_limits<int>::max();
+	int minId = 0;
+	for (int j = 0; j < steps.size(); ++j) {
+		if (steps[j]._score < minScore) {
+			minId = j;
+			minScore = steps[j]._score;
+		}
+	}
+
+//	cout << endl << "best: " << endl;
+//	cout << steps[minId] << endl;
+
+	return steps[minId];
+}
+
+ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter, int dth = 20, double truncate = 1) {
 	// - construct elite set (ES) with size b solutions
+	vector<Chromosome> es;
+	for (int i = 0; i < ESSize; ++i) {
+		auto chrom = Chromosome::GRC();
+		chrom.swapNodesOpt();
+		es.push_back(chrom);
+	}
+	sort(es.begin(), es.end(), [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
+
 	// - sort ES by score
 
 	for (int gi = 0; gi < globalIter; ++gi) { // or just set time limit
 		for (int li = 0; li < localIter; ++li) {
+//			cout << "iteration: " << gi << " / " << li << endl;
 			// - construct solution
+			Chromosome x = Chromosome::GRC();
 			// - local search
+//			x.swapNodesOpt();
 			// - random select xj from ES
+			int j = rand() % ESSize;
+
 			// - get best solution from PR
 			// - local search and save to y
+			Chromosome y = pathRelink(x, es[j], truncate);
+			y.swapNodesOpt();
 
-			// - if the solution is better than the best in ES replace it
-			// - elseif solution is better than the worst in ES and hamming distance is smaller than dth
-				// find the closest solution in ES (by hamming distance) to y such that score y._score is better
-				// replace them
-				// sort ES
+
+			if (y._score < es[0]._score) { // - if the solution is better than the best in ES replace it
+				es[0] = y;
+			}
+
+			else if (y._score < es[ESSize - 1]._score) { // - elseif solution is better than the worst in ES and hamming distance is smaller than dth
+				bool addToEs = true;
+				vector<int> distances(ESSize);
+				for (int i = 0; i < ESSize; ++i) {
+					distances[i] = Chromosome::distance(y, es[i]);
+					if (distances[i] <= dth) {
+						addToEs = false;
+						break;
+					}
+				}
+				if (addToEs) {
+					// find the closest solution in ES (by hamming distance) to y such that score y._score is better
+					int swapId;
+					int swapDistance = numeric_limits<int>::max();;
+					for (int i = 0; i < ESSize; ++i) {
+						if (y._score < es[i]._score) {
+							if (distances[i] < swapDistance) {
+								swapId = i;
+								swapDistance = distances[i];
+							}
+						}
+					}
+					// replace them
+					es[swapId] = y;
+					// sort ES
+					sort(es.begin(), es.end(), [](const Chromosome & a, const Chromosome & b) {return a._score < b._score; });
+				}
+			}
 		}
 
 		// recombine ES (not needed)
 		// by PR till no new better solutions are found
 	}
 
+//
+//	for (int k = 0; k < ESSize; ++k) {
+//		cout << es[k] << endl;
+//	}
+
+	ExperimentResult result;
+	result.bestScore = es[0]._score;
+	return result;
 }
 
-Chromosome pathRelink(Chromosome a, Chromosome b) {
-
-}
 
 ExperimentResult gaSearch(vector<Node> nodes, int popSize) {
 	//store optimal solution
@@ -201,7 +310,7 @@ ExperimentResult iterativeLocalSearch(vector<Node> nodes, int perturbationSize) 
 	return result;
 }
 
-vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchType type, int p1 = -1) {
+vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchType type, int p1 = -1, int p2 = -1, int p3 = -1, int p4 = -1) {
 
 	vector<ExperimentResult> results;
 
@@ -226,14 +335,20 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 				cout << "running GA " << i << " and " << p1 <<  endl;
 				result = gaSearch(nodes, p1);
 			break;
+			case SearchType::PR:
+				cout << "running PR " << i << endl;
+				result = dynamicPathRelinking(p1, p2, p3, p4);
+			break;
 		}
-		cout << "\tbest: " << result.bestScore << endl;
 		std::clock_t ms_end = std::clock();
 		auto t2 = chrono::high_resolution_clock::now();
 
 		result.cpuTime = 1000.0 * (ms_end - ms_start) / CLOCKS_PER_SEC;
 		result.wallTime = chrono::duration_cast<chrono::milliseconds>(t2 - t1);
 		results.push_back(result);
+
+		cout << "\tbest: " << result.bestScore << endl;
+		cout << "\tcpu ime: " << result.cpuTime << endl;
 	}
 
 	ofstream output;
@@ -247,6 +362,9 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 		break;
 		case SearchType::GA:
 			output.open(string("results/") + to_string(timestamp) + "_GA" + to_string(p1) + ".csv");
+		break;
+		case SearchType::PR:
+			output.open(string("results/") + to_string(timestamp) + "_PR_" + to_string(p1) + "_" + to_string(p2) + "_" + to_string(p3) + "_" + to_string(p4) + ".csv");
 		break;
 	}
 
@@ -266,11 +384,10 @@ int main(int argc, char* argv[])
 	vector<Node> nodes = DataReader::GetData("data.txt");
 	Chromosome::_nodeList = nodes;
 
-//	auto grcSolution = Chromosome::GRC();
+//	auto a = Chromosome::GRC();
+//	auto b = Chromosome::GRC();
 //	cout << grcSolution._score << " " << grcSolution.checkValidity() << endl;
-
-
-
+//	pathRelink(a, b);
 
 	auto optimalSolution = Chromosome(nodes.size(), true);
 	cout << "Optimal soution of provided graph: " << optimalSolution._score << " isValid: " << optimalSolution.checkValidity() << endl;
@@ -294,6 +411,9 @@ int main(int argc, char* argv[])
 	}
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 50);
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 100);
+	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 100);
+
+	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 5, 50, 20);
 
 	#ifdef _WIN64
 		cin.ignore();

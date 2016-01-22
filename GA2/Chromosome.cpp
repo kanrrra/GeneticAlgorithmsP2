@@ -247,10 +247,6 @@ Chromosome::Chromosome(vector<char> & solution)
 	_score = calcScore();
 }
 
-Chromosome::~Chromosome()
-{
-}
-
 vector<Chromosome> Chromosome::GATournamentSelection(vector<Chromosome> population, int tournamentSize, bool shufflePopulation) {
 	if (shufflePopulation)
 		random_shuffle(population.begin(), population.end());
@@ -295,10 +291,7 @@ void Chromosome::invert() {
 
 Chromosome Chromosome::GACrossOver(Chromosome parentA, Chromosome parentB) {
 	int size = parentA._solution.size();
-	int distance = 0;
-	for (int j = 0; j < size; ++j) {
-		distance += parentA._solution[j] != parentB._solution[j];
-	}
+	int distance = Chromosome::distance(parentA, parentB);
 	if (distance > size / 2) {
 		parentA.invert();
 	}
@@ -419,4 +412,17 @@ vector<char> Chromosome::GRCsolution(double badConnectionWeight) {
 //	cout << endl;
 
 	return solution;
+}
+Chromosome::Chromosome(const Chromosome &b) {
+	_score = b._score;
+	_solution = b._solution;
+	_scoreContribution = b._scoreContribution;
+}
+
+int Chromosome::distance(Chromosome &a, Chromosome &b) {
+	int distance = 0;
+	for (int j = 0; j < a._solution.size(); ++j) {
+		distance += a._solution[j] != b._solution[j];
+	}
+	return distance;
 }

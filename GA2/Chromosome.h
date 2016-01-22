@@ -36,15 +36,16 @@ public:
 	int mutate(unsigned int perturbationSize);
 
 	Chromosome(int size, bool optimal = false);
+	Chromosome(const Chromosome & b);
 	Chromosome(vector<char> & solution);
-	~Chromosome();
+
 
 	friend ostream& operator<< (ostream& out, const Chromosome& sol);
 
   	static Chromosome GRC();
   	static vector<char> GRCsolution(double badConnectionWeight = 0);
 
-
+	static int distance(Chromosome & a, Chromosome & b);
 private:
 	int calcScore();
 
