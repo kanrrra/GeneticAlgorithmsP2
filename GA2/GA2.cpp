@@ -18,13 +18,10 @@
 
 using namespace std;
 
-<<<<<<< HEAD
-const int nofExperiments = 1;
-const int nofRestarts = 30;
-=======
+
 const int nofExperiments = 30;
 const int nofRestarts = 1000;
->>>>>>> 5f340d7e6706deec94639e5d1c3f4be0ecf17882
+
 const bool runMS = true;
 const bool runGA = false;
 const bool runILS = false;
