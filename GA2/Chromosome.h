@@ -39,10 +39,10 @@ public:
 	int swapNodesOpt();
 	int mutate(unsigned int perturbationSize);
 
-	Chromosome(int size, bool optimal = false);
+  	Chromosome(int size);
+	Chromosome(int size, Chromosome::GenerationType gt);
 	Chromosome(const Chromosome & b);
 	Chromosome(vector<char> & solution);
-	~Chromosome();
 
 	friend ostream& operator<< (ostream& out, const Chromosome& sol);
 

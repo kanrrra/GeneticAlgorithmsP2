@@ -250,18 +250,16 @@ Chromosome::Chromosome(int size, Chromosome::GenerationType gt)
 	_score = calcScore();
 }
 
+Chromosome::Chromosome(int size)
+{
+	_solution = Chromosome::GRCsolution();
+	_score = calcScore();
+}
+
 Chromosome::Chromosome(vector<char> & solution)
 {
 	_solution = solution;
 	_score = calcScore();
-}
-
-Chromosome::Chromosome(){
-	_score = -1;
-}
-
-Chromosome::~Chromosome()
-{
 }
 
 vector<Chromosome> Chromosome::GATournamentSelection(vector<Chromosome> population, int tournamentSize, bool shufflePopulation) {

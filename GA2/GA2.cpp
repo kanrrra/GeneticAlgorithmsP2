@@ -28,7 +28,7 @@ const bool runPR = true;
 const int perturbationSize = 1;
 
 enum SearchType {
-  MS, ILS, GA
+  MS, ILS, GA, PR
 };
 
 
