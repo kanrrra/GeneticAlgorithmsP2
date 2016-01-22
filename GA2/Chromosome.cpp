@@ -364,7 +364,7 @@ Chromosome Chromosome::GRC() {
 	return Chromosome(solution);
 }
 
-vector<char> Chromosome::GRCsolution() {
+vector<char> Chromosome::GRCsolution(double badConnectionWeight) {
 	int size = _nodeList.size();
 	vector<char> solution(size);
 	int firstPosition = rand() % size;
@@ -381,29 +381,38 @@ vector<char> Chromosome::GRCsolution() {
 		for (int i = 0; i < size; ++i) {
 			if (solution[i] == 0) {
 				int connections = 0;
+				int connectionsBad = 0;
 				for (auto link : _nodeList[i]._links) {
 					if (solution[link] == 1) {
 						connections++;
 					}
+					else {
+						connectionsBad++;
+					}
 				}
 
 				candidates[canId]._connections = connections;
+				candidates[canId]._connectionsBad = connectionsBad;
+				candidates[canId]._score = (1-badConnectionWeight) * connections - badConnectionWeight * connectionsBad;
 				candidates[canId]._id = i;
 
 				canId++;
 			}
 		}
 
-		sort(candidates.begin(), candidates.end(), [](const Candidate & a, const Candidate & b) {return a._connections > b._connections; });
+		sort(candidates.begin(), candidates.end(), [](const Candidate & a, const Candidate & b) {return a._score > b._score; });
 
 //		for (auto c : candidates) {
-//			cout << c._connections << " ";
+//			cout << c._score << " ";
 //		}
 //		cout << endl;
 
-		int lowestConnectionCount = candidates[0]._connections;
+		double lowestConnectionCount = candidates[0]._score;
 		int partSize = 1;
-		while (lowestConnectionCount == candidates[partSize]._connections && partSize < toSelect) {
+//		if (partSize == 0) {
+//			partSize = 1;
+//		}
+		while (lowestConnectionCount == candidates[partSize]._score && partSize < toSelect) {
 			partSize++;
 		}
 		int addId = rand() % partSize;
