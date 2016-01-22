@@ -6,7 +6,7 @@
 
 vector<char> Chromosome::defaultDistribution;
 vector<Node> Chromosome::_nodeList;
-
+//int Chromosome::gcrCalls = 0;
 
 vector<char> Chromosome::generateOptimalSolutionForAssignmentData(int size){
 	vector<char> sol(size, 0);
@@ -360,6 +360,8 @@ Chromosome Chromosome::GRC() {
 }
 
 vector<char> Chromosome::GRCsolution(double badConnectionWeight) {
+
+//	Chromosome::gcrCalls++;
 	int size = _nodeList.size();
 	vector<char> solution(size);
 	int firstPosition = rand() % size;

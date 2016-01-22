@@ -48,6 +48,7 @@ public:
 
   	static Chromosome GRC();
   	static vector<char> GRCsolution(double badConnectionWeight = 0);
+//  	static int gcrCalls;
 
 	static int distance(Chromosome & a, Chromosome & b);
 private:

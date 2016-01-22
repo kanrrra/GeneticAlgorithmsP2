@@ -180,6 +180,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 	for (int gi = 0; gi < globalIter; ++gi) { // or just set time limit
 		for (int li = 0; li < localIter; ++li) {
 			cout << "iteration: " << gi << " / " << li << endl;
+//			cout << "gcrCalls: " << Chromosome::gcrCalls << endl;
 			// - construct solution
 			Chromosome x = Chromosome::GRC();
 			// - local search
