@@ -190,9 +190,8 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 			// - get best solution from PR
 			// - local search and save to y
-			Chromosome y = pathRelink(x, es[j], truncate);
+			Chromosome y = Chromosome::PathRelink(x, es[j]);
 			y.swapNodesOpt();
-
 
 			if (y._score < es[0]._score) { // - if the solution is better than the best in ES replace it
 				es[0] = y;
@@ -510,7 +509,7 @@ int main(int argc, char* argv[])
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 50);
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 100);
 
-	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 4, 50, 10);
+	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 4, 10, 20);
 
 	#ifdef _WIN64
 		cin.ignore();

@@ -34,6 +34,7 @@ public:
   	static vector<Chromosome> GATournamentSelection(vector<Chromosome> population, int tournamentSize, bool shufflePopulation=true);
   	static vector<Chromosome> GAGenerateChildren(vector<Chromosome> parentsA, vector<Chromosome> parentsB);
   	static Chromosome GACrossOver(Chromosome parentA, Chromosome parentB);
+  	static Chromosome PathRelink(const Chromosome & a, const Chromosome & b);
 
 	void flipNodeAtIdx(int idx);
 	int swapNodesOpt();
@@ -50,9 +51,10 @@ public:
   	static vector<char> GRCsolution(double badConnectionWeight = 0);
 //  	static int gcrCalls;
 
-	static int distance(Chromosome & a, Chromosome & b);
+	static int distance(const Chromosome & a, const Chromosome & b);
 private:
 	int calcScore();
+  	static int scoreChange(vector<char> & solution, int idx);
 
 	static vector<char> defaultDistribution;
 

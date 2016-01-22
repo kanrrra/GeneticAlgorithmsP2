@@ -442,10 +442,74 @@ Chromosome::Chromosome(const Chromosome &b) {
 	_scoreContribution = b._scoreContribution;
 }
 
-int Chromosome::distance(Chromosome &a, Chromosome &b) {
+int Chromosome::distance(const Chromosome &a, const Chromosome &b) {
 	int distance = 0;
 	for (int j = 0; j < a._solution.size(); ++j) {
 		distance += a._solution[j] != b._solution[j];
 	}
 	return distance;
 }
+
+Chromosome Chromosome::PathRelink(const Chromosome & a, const Chromosome & guidingSolution) {
+	int distance = Chromosome::distance(a, guidingSolution);
+	int size = a._solution.size();
+
+	Chromosome current(a);
+
+	Chromosome best(a);
+	int scoreBest = best._score;
+
+	Chromosome bestOverall(best);
+	int scoreBestOverall = best._score;
+
+	for (int k = 0; k < distance / 2; ++k) {
+		scoreBest = numeric_limits<int>::max();
+		for (int i = 0; i < size; ++i) {
+			if (current._solution[i] != guidingSolution._solution[i]) {
+				for (int j = i + 1; j < size; ++j) {
+					if (current._solution[j] != guidingSolution._solution[j] && current._solution[i] != current._solution[j]) {
+						Chromosome tmp(a);
+						tmp.flipNodeAtIdx(i);
+						tmp.flipNodeAtIdx(j);
+						if (tmp._score < scoreBest) {
+							best = tmp;
+							scoreBest = best._score;
+						}
+						if (tmp._score < scoreBestOverall) {
+							bestOverall = tmp;
+							scoreBestOverall = bestOverall._score;
+						}
+					}
+				}
+			}
+		}
+		current = best;
+	}
+	return bestOverall;
+}
+
+
+//void Chromosome::flipNodeAtIdx(int idx){
+//	char myColor = _solution[idx];
+//	int scoreChange = 0;
+//	for (int n : _nodeList[idx]._links){
+//		if (_solution[n] == myColor){
+//			_scoreContribution[n]++;
+//			scoreChange++;
+//		}
+//		else {
+//			_scoreContribution[n]--;
+//			scoreChange--;
+//		}
+//	}
+//
+//	//cout << "idx: " << idx << " " << scoreChange << endl;
+//
+//	_score += scoreChange;
+//
+//	_scoreContribution[idx] = _nodeList[idx]._links.size() - _scoreContribution[idx];
+//	_solution[idx] ^= 1;
+//}
+//int Chromosome::scoreChange(vector<char> &solution, int idx) {
+//	return 0;
+//}
