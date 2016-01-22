@@ -403,13 +403,22 @@ vector<char> Chromosome::GRCsolution(double badConnectionWeight) {
 //		cout << endl;
 
 		double lowestConnectionCount = candidates[0]._score;
-		int partSize = 1;
+		
 //		if (partSize == 0) {
 //			partSize = 1;
 //		}
+
+		int partSize;
+		for (partSize = 1; partSize < toSelect; partSize++){
+			if (lowestConnectionCount > candidates[partSize]._score){
+				break;
+			}
+		}
+		/*
+		int partSize = 1;
 		while (lowestConnectionCount == candidates[partSize]._score && partSize < toSelect) {
 			partSize++;
-		}
+		}*/
 		int addId = rand() % partSize;
 
 

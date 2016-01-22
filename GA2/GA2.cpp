@@ -19,7 +19,7 @@
 using namespace std;
 
 
-const int nofExperiments = 30;
+const int nofExperiments = 1;
 const int nofRestarts = 1000;
 const bool runMS = false;
 const bool runGA = false;
@@ -94,28 +94,36 @@ Chromosome pathRelink(Chromosome a, Chromosome b, double truncate = 1) {
 //	cout << a << endl;
 //	cout << b << endl;
 
-	vector<Chromosome> steps;
-	steps.push_back(a);
+	//vector<Chromosome> steps;
+	//steps.push_back(a);
 
 	int distance = Chromosome::distance(a, b);
-//	cout << "distance: " << distance << endl;
+
+	cout << "distance: " << distance << endl;
 //	cout << "steps: " << endl;
 
+	Chromosome current = a;
+	Chromosome bestCandidate = a;
+	int currentBestScore = a._score;
 
-	// we want to swap all mismatching bites
+	// we want to swap all mismatching bits
 	for (int k = 0; k < distance; ++k) {
 
 		// generate all swaps of one bit
 		vector<Chromosome> candidates;
+		candidates.reserve(a._solution.size());
 
 		for (int i = 0; i < a._solution.size(); ++i) {
-			if (steps.back()._solution[i] != b._solution[i]) {
-				Chromosome n(steps.back());
+			//if (steps.back()._solution[i] != b._solution[i]) {
+			if (current._solution[i] != b._solution[i]) {
+				//Chromosome n(steps.back());
+				Chromosome n(current);
 				n.flipNodeAtIdx(i);
 				candidates.push_back(n);
 			}
 		}
-
+		
+		//find the smallest score and its idx
 		int minScore = numeric_limits<int>::max();
 		int minId = 0;
 		for (int j = 0; j < candidates.size(); ++j) {
@@ -131,9 +139,16 @@ Chromosome pathRelink(Chromosome a, Chromosome b, double truncate = 1) {
 	//	}
 
 //		cout << candidates[minId] << endl;
-		steps.push_back(candidates[minId]);
+		//steps.push_back(candidates[minId]);
+		current = candidates[minId];
+		if (current._score < currentBestScore){ 
+			currentBestScore = current._score;
+			bestCandidate = current;
+		}
 	}
 
+	return bestCandidate;
+	/*
 	int minScore = numeric_limits<int>::max();
 	int minId = 0;
 	for (int j = 0; j < steps.size(); ++j) {
@@ -142,11 +157,12 @@ Chromosome pathRelink(Chromosome a, Chromosome b, double truncate = 1) {
 			minScore = steps[j]._score;
 		}
 	}
+	
 
 //	cout << endl << "best: " << endl;
 //	cout << steps[minId] << endl;
 
-	return steps[minId];
+	return steps[minId];*/
 }
 
 ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter, int dth = 20, double truncate = 1) {
@@ -180,7 +196,6 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 			if (y._score < es[0]._score) { // - if the solution is better than the best in ES replace it
 				es[0] = y;
 			}
-
 			else if (y._score < es[ESSize - 1]._score) { // - elseif solution is better than the worst in ES and hamming distance is smaller than dth
 				bool addToEs = true;
 				vector<int> distances(ESSize);
@@ -350,7 +365,7 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 				result = gaSearch(nodes, p1);
 			break;
 			case SearchType::PR:
-				cout << "running PR " << i << endl;
+				cout << "running PR " << i << ":" << p1 << ":" << p2 << ":" << p3 << ":" << p4 << endl;
 				result = dynamicPathRelinking(p1, p2, p3, p4);
 			break;
 		}
