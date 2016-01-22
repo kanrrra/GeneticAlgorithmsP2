@@ -14,6 +14,10 @@ using namespace std;
 class Chromosome
 {
 public:
+	enum GenerationType {
+		OPTIMAL, RANDOM, GREEDY
+	};
+
 	int _score;
 	vector<char> _solution;
 	vector<char> _scoreContribution;
@@ -38,7 +42,7 @@ public:
 	Chromosome(int size, bool optimal = false);
 	Chromosome(const Chromosome & b);
 	Chromosome(vector<char> & solution);
-
+	~Chromosome();
 
 	friend ostream& operator<< (ostream& out, const Chromosome& sol);
 
