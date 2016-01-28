@@ -19,12 +19,12 @@
 using namespace std;
 
 
-const int nofExperiments = 1;
-const int nofRestarts = 1000;
-const bool runMS = false;
+const int nofExperiments = 15;
+const int nofRestarts = 10000;
+const bool runMS = true;
 const bool runGA = false;
 const bool runILS = false;
-const bool runPR = true;
+const bool runPR = false;
 const int perturbationSize = 1;
 
 enum SearchType {
