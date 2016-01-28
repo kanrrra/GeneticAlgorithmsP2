@@ -464,25 +464,43 @@ Chromosome Chromosome::PathRelink(const Chromosome & a, const Chromosome & guidi
 
 	for (int k = 0; k < distance / 2; ++k) {
 		scoreBest = numeric_limits<int>::max();
-		for (int i = 0; i < size; ++i) {
-			if (current._solution[i] != guidingSolution._solution[i]) {
-				for (int j = i + 1; j < size; ++j) {
-					if (current._solution[j] != guidingSolution._solution[j] && current._solution[i] != current._solution[j]) {
-						Chromosome tmp(a);
-						tmp.flipNodeAtIdx(i);
+
+		bool found = true;
+		int i = 0, j = 0;
+		while (found) {
+			found = false;
+
+			Chromosome tmp(a);
+
+			for (; i < size; ++i) {
+				if (current._solution[i] == 0 && current._solution[i] != guidingSolution._solution[i]) {
+					tmp.flipNodeAtIdx(i);
+					found = true;
+					cout << "found 0 at " << i << endl;
+					break;
+				}
+			}
+
+			if (found) {
+				found = false;
+				for (; j < size; ++j) {
+					if (current._solution[j] == 1 && current._solution[j] != guidingSolution._solution[j]) {
 						tmp.flipNodeAtIdx(j);
+
 						if (tmp._score < scoreBest) {
+							scoreBest = tmp._score;
 							best = tmp;
-							scoreBest = best._score;
 						}
-						if (tmp._score < scoreBestOverall) {
-							bestOverall = tmp;
-							scoreBestOverall = bestOverall._score;
-						}
+						cout << "found 1 at " << j << endl;
+						found = true;
+						break;
 					}
 				}
 			}
+
+
 		}
+
 		current = best;
 	}
 	return bestOverall;
