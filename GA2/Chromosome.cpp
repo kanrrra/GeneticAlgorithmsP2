@@ -46,7 +46,7 @@ vector<char> Chromosome::generateRandomSolution(int size){
 	return solution;
 }
 
-bool Chromosome::checkValidity(){
+bool Chromosome::checkValidity() const {
 	int count = 0;
 	for (int sol : _solution){
 		if (sol == 1) count++;
@@ -351,6 +351,7 @@ ostream& operator<< (ostream & out, const Chromosome &sol){
 		out << (int)sol._solution[i] << ",";
 	}
 	out << " " << sol._score;
+	out << " | valid: " << sol.checkValidity();
 	return out;
 }
 
@@ -462,47 +463,49 @@ Chromosome Chromosome::PathRelink(const Chromosome & a, const Chromosome & guidi
 	Chromosome bestOverall(best);
 	int scoreBestOverall = best._score;
 
+
 	for (int k = 0; k < distance / 2; ++k) {
 		scoreBest = numeric_limits<int>::max();
 
-		bool found = true;
-		int i = 0, j = 0;
-		while (found) {
-			found = false;
+//		cout << current << endl;
 
-			Chromosome tmp(a);
+		int i,j;
+		for (i = 0; i < size; ++i) {
+			if (current._solution[i] == 0 && current._solution[i] != guidingSolution._solution[i]) {
+				Chromosome tmp(current);
+				tmp.flipNodeAtIdx(i);
+//				cout << "found 0 at " << i << endl;
+				for (j = 0; j < size; ++j) {
+					if (i != j && tmp._solution[j] == 1 && tmp._solution[j] != guidingSolution._solution[j]) {
+						Chromosome tmp2(tmp);
+						tmp2.flipNodeAtIdx(j);
 
-			for (; i < size; ++i) {
-				if (current._solution[i] == 0 && current._solution[i] != guidingSolution._solution[i]) {
-					tmp.flipNodeAtIdx(i);
-					found = true;
-					cout << "found 0 at " << i << endl;
-					break;
-				}
-			}
-
-			if (found) {
-				found = false;
-				for (; j < size; ++j) {
-					if (current._solution[j] == 1 && current._solution[j] != guidingSolution._solution[j]) {
-						tmp.flipNodeAtIdx(j);
-
-						if (tmp._score < scoreBest) {
-							scoreBest = tmp._score;
-							best = tmp;
+						if (tmp2._score < scoreBest) {
+							scoreBest = tmp2._score;
+							best = tmp2;
 						}
-						cout << "found 1 at " << j << endl;
-						found = true;
-						break;
+//						cout << tmp2 << endl;
+//						cout << "found 1 at " << j << endl;
 					}
 				}
 			}
+		}
 
-
+		if (best._score < scoreBestOverall) {
+			scoreBestOverall = best._score;
+			bestOverall = best;
 		}
 
 		current = best;
+
+//		cout << current << endl;
 	}
+
+//	cout << "valid: " << bestOverall.checkValidity() << endl;
+
+//	if (scoreBestOverall > a._score && scoreBestOverall > guidingSolution._score) {
+//		cout << "Better!!" << endl;
+//	}
 	return bestOverall;
 }
 

@@ -24,7 +24,7 @@ public:
 
 	vector<char> generateRandomSolution(int size);
 	vector<char> generateOptimalSolutionForAssignmentData(int size);
-	bool checkValidity();
+	bool checkValidity() const;
 
   	void invert();
 

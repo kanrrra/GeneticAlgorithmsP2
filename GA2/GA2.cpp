@@ -300,6 +300,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 	ExperimentResult result;
 	result.bestScore = es[0]._score;
+	cout << "valid: " << es[0] << endl;
 	return result;
 }
 
@@ -479,12 +480,37 @@ int main(int argc, char* argv[])
 	vector<Node> nodes = DataReader::GetData("data.txt");
 	Chromosome::_nodeList = nodes;
 
-//	auto a = Chromosome::GRC();
-//	auto b = Chromosome::GRC();
 
-//	auto grcSolution = Chromosome::GRC();
-//	cout << grcSolution._score << " " << grcSolution.checkValidity() << endl;
-//	pathRelink(a, b);
+	int better = 0;
+	for (int j = 0; j < 100; ++j) {
+		auto a = Chromosome::GRC();
+		a.swapNodesOpt();
+		auto b = Chromosome::GRC();
+		b.swapNodesOpt();
+
+//		cout << "a: " << a << endl;
+//		cout << "b: " << b << endl << endl;
+
+//		auto grcSolution = Chromosome::GRC();
+//		cout << grcSolution._score << " " << grcSolution.checkValidity() << endl;
+		auto prChild = Chromosome::PathRelink(a, b);
+
+//		cout << endl << prChild << endl;
+//		cout << "valid: " << prChild.checkValidity() << endl;
+//		cout << "score: " << prChild._score << endl;
+		prChild.swapNodesOpt();
+		cout << j << ": a=" << a._score << " b=" << b._score << " pr=" << prChild._score << endl;
+
+		if (prChild._score < a._score && prChild._score < b._score) {
+			better++;
+		}
+	}
+
+	cout << "improvement in " << better << " out of 100 cases" << endl;
+
+
+	return 0;
+
 
 	auto optimalSolution = Chromosome(nodes.size(), Chromosome::OPTIMAL);
 	cout << "Optimal soution of provided graph: " << optimalSolution._score << " isValid: " << optimalSolution.checkValidity() << endl;
@@ -509,7 +535,7 @@ int main(int argc, char* argv[])
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 50);
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 100);
 
-	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 4, 10, 20);
+	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 10, 20, 40);
 
 	#ifdef _WIN64
 		cin.ignore();
