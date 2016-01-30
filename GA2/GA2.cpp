@@ -21,7 +21,7 @@
 
 using namespace std;
 
-const int MAX_TIME = 60;
+const int MAX_TIME = 30;
 
 const int nofExperiments = 30;
 const int nofRestarts = 10;
@@ -34,6 +34,7 @@ enum SearchType {
   MS, ILS, GA, PR
 };
 static const char * EnumStrings[] = { "MS", "ILS", "GA", "PR" };
+static const char * GenTypeStrings[] = { "OPTIMAL", "RANDOM", "GREEDY" };
 
 
 struct ExperimentResult {
@@ -71,7 +72,7 @@ ostream& operator << (std::ostream &o, const ExperimentResult & rhs){
 	return o;
 }
 
-ExperimentResult multiStart_t(int size, int iterations, time_t duration){
+ExperimentResult multiStart_t(int size, Chromosome::GenerationType genType, int iterations, time_t duration){
 	time_t endTime = time(0) + duration;
 	if (duration < 0){
 		endTime = numeric_limits<long>::max();
@@ -80,7 +81,7 @@ ExperimentResult multiStart_t(int size, int iterations, time_t duration){
 	int best = numeric_limits<int>::max();
 	int i;
 	for (i = 0; i < iterations && time(0) < endTime; i++){
-		auto solution = Chromosome(size);
+		auto solution = Chromosome(size, genType);
 		solution.swapNodesOpt();
 
 		if (solution._score < best) best = solution._score;
@@ -92,42 +93,17 @@ ExperimentResult multiStart_t(int size, int iterations, time_t duration){
 	return result;
 }
 
-ExperimentResult multiStart(int size, int iterations = -1, time_t maxTime = -1) {
+ExperimentResult multiStart(int size, Chromosome::GenerationType genType, int iterations = -1, time_t maxTime = -1) {
 	if (iterations < 0) iterations = numeric_limits<int>::max();
 	time_t endTime = time(0) + maxTime;
 	if (maxTime < 0){
 		endTime = numeric_limits<long>::max();
 	}
-	/*
-	int nofThreads = max((unsigned int)1, std::thread::hardware_concurrency() - 1);
-
-	cout << "Multistart is using: " << nofThreads << " threads" << endl;
-
-	vector<future<ExperimentResult>> futures(nofThreads);
-	for (int i = 0; i < nofThreads; i++){
-		futures[i] = async(multiStart_t, size, iterations, maxTime);
-	}
-
-	ExperimentResult best = futures[0].get();
-	int totalIterations = best.iterations;
-	for (int i = 1; i < nofThreads; i++){
-		auto result = futures[i].get();
-
-		totalIterations += result.iterations;
-
-		if (result.bestScore < best.bestScore){
-			best = result;
-		}
-	}
-
-	best.iterations = totalIterations;
-	return best;
-	*/
 
 	int best = numeric_limits<int>::max();
 	int i;
 	for (i = 0; i < iterations && time(0) < endTime; i++){
-		auto solution = Chromosome(size);
+		auto solution = Chromosome(size, genType);
 		solution.swapNodesOpt();
 
 		if (solution._score < best) best = solution._score;
@@ -355,7 +331,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 }
 
 
-ExperimentResult gaSearch(int size, int popSize, time_t maxTime = -1) {
+ExperimentResult gaSearch(int size, int popSize, Chromosome::GenerationType genType, time_t maxTime = -1) {
 	time_t endTime = time(0) + maxTime;
 	if (maxTime < 0){
 		endTime = numeric_limits<long>::max();
@@ -365,7 +341,7 @@ ExperimentResult gaSearch(int size, int popSize, time_t maxTime = -1) {
 	//ofstream GASolutionFile;
 	//GASolutionFile.open("GASolution_" + to_string(time(0)) + ".txt");
 
-	auto population = Chromosome::generateRandomPopulation(popSize, size);
+	auto population = Chromosome::generateRandomPopulation(popSize, size, genType);
 
 	for (int i = 0; i < population.size(); i++){
 		population[i].swapNodesOpt();
@@ -429,12 +405,12 @@ ExperimentResult gaSearch(int size, int popSize, time_t maxTime = -1) {
 }
 
 //maxtime in seconds
-ExperimentResult iterativeLocalSearch(int size, int perturbationSize, int maxIterations = 50, time_t maxTime = -1) {
+ExperimentResult iterativeLocalSearch(int size, int perturbationSize, Chromosome::GenerationType genType, int maxIterations = 50, time_t maxTime = -1) {
 //	ofstream ILSsolution;
 //	ILSsolution.open("ILSsolution.txt");
 	double maxDeviation = 1.2;
 
-	Chromosome candidate = Chromosome(size);
+	Chromosome candidate = Chromosome(size, genType);
 	candidate.swapNodesOpt();
 
 	Chromosome bestSolution(candidate);
@@ -472,14 +448,14 @@ ExperimentResult iterativeLocalSearch(int size, int perturbationSize, int maxIte
 	return result;
 }
 
-ExperimentResult runExperiment(int size, SearchType type, int p1, int p2, int p3, int p4){
+ExperimentResult runExperiment(int size, SearchType type, Chromosome::GenerationType genType, int p1, int p2, int p3, int p4){
 	std::clock_t ms_start = std::clock();
 	auto t1 = chrono::high_resolution_clock::now();
 	ExperimentResult result;
 	switch (type) {
 	case SearchType::MS:
 		//cout << "running MS " << i << endl;
-		result = multiStart(size, -1, MAX_TIME);
+		result = multiStart(size, genType, -1, MAX_TIME);
 		break;
 	case SearchType::ILS:
 		if (p1 == -1){
@@ -487,11 +463,11 @@ ExperimentResult runExperiment(int size, SearchType type, int p1, int p2, int p3
 		}
 
 		//cout << "running ILS " << i << " and " << p1 << endl;
-		result = iterativeLocalSearch(size, p1, -1, MAX_TIME);
+		result = iterativeLocalSearch(size, p1, genType, -1, MAX_TIME);
 		break;
 	case SearchType::GA:
 		//cout << "running GA " << i << " and " << p1 << endl;
-		result = gaSearch(size, p1, MAX_TIME);
+		result = gaSearch(size, p1, genType, MAX_TIME);
 		break;
 	case SearchType::PR:
 		//cout << "running PR " << i << ":" << p1 << ":" << p2 << ":" << p3 << ":" << p4 << endl;
@@ -507,7 +483,9 @@ ExperimentResult runExperiment(int size, SearchType type, int p1, int p2, int p3
 	return result;
 }
 
-vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchType type, int p1 = -1, int p2 = -1, int p3 = -1, int p4 = -1) {
+vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchType type, Chromosome::GenerationType genType, int p1 = -1, int p2 = -1, int p3 = -1, int p4 = -1) {
+
+	cout << "experiment parameters: " << p1 << ":" << p2 << ":" << p3 << ":" << p4 << endl;
 
 	vector<ExperimentResult> results;
 	int nodesSize = nodes.size();
@@ -518,10 +496,9 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 	int experimentsRun = 0;
 	while (experimentsRun < count){
 		cout << "running experiments " << experimentsRun << "..." << (experimentsRun + nofThreads) << " type: " << EnumStrings[type] << endl;
-		cout << p1 << ":" << p2 << ":" << p3 << ":" << p4 << endl;
 
 		for (int i = 0; i < nofThreads; i++){
-			futures[i] = async(runExperiment, nodesSize, type, p1, p2, p3, p4);
+			futures[i] = async(runExperiment, nodesSize, type, genType, p1, p2, p3, p4);
 		}
 
 		for (int i = 0; i < nofThreads; i++){
@@ -532,53 +509,10 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 
 		experimentsRun += nofThreads;
 	}
-	
-
-	/*
-	for (int i = 0; i < count; ++i) {
-		auto result = runExperiment(nodes.size(), type, p1, p2, p3, p4);
-
-		
-		std::clock_t ms_start = std::clock();
-		auto t1 = chrono::high_resolution_clock::now();
-		ExperimentResult result;
-		switch (type) {
-			case SearchType::MS:
-				cout << "running MS " << i << endl;
-				result = multiStart(nodes, -1, MAX_TIME);
-			break;
-			case SearchType::ILS:
-				if (p1 == -1){
-					throw runtime_error("ILS parameter cannot be negative!");
-				}
-
-				cout << "running ILS " << i << " and " << p1 << endl;
-				result = iterativeLocalSearch(nodes, p1, -1, MAX_TIME);
-			break;
-			case SearchType::GA:
-				cout << "running GA " << i << " and " << p1 <<  endl;
-				result = gaSearch(nodes, p1);
-			break;
-			case SearchType::PR:
-				cout << "running PR " << i << ":" << p1 << ":" << p2 << ":" << p3 << ":" << p4 << endl;
-				result = dynamicPathRelinking(p1, p2, p3, p4);
-			break;
-		}
-		std::clock_t ms_end = std::clock();
-		auto t2 = chrono::high_resolution_clock::now();
-
-		result.cpuTime = 1000.0 * (ms_end - ms_start) / CLOCKS_PER_SEC;
-		result.wallTime = chrono::duration_cast<chrono::milliseconds>(t2 - t1);
-		
-		
-		results.push_back(result);
-
-		cout << result << endl;
-	}*/
 
 	ofstream output;
 	int timestamp = std::time(0);
-	string path = "results/" + to_string(timestamp) + "_" + EnumStrings[type] + "_t" + to_string(MAX_TIME) + ".csv";
+	string path = "results/" + to_string(timestamp) + "_" + EnumStrings[type] + "_" + GenTypeStrings[genType] + "_" + to_string(p1) + "_" + to_string(p2) + "_" + to_string(p3) + "_" + to_string(p4) + "_t" + to_string(MAX_TIME) + ".csv";
 	output.open(path);
 
 	cout << "creating result file: " << path << endl;
@@ -618,28 +552,33 @@ int main(int argc, char* argv[])
 	optimalSolutionFile << optimalSolution;
 	optimalSolutionFile.close();
 
-	if (runMS) runExperiments(nodes, nofExperiments, SearchType::MS);
+	vector<Chromosome::GenerationType> genTypes = {/*Chromosome::GenerationType::GREEDY,*/ Chromosome::GenerationType::RANDOM };
+	for (auto genType : genTypes){
+		cout << "using genType: " << GenTypeStrings[genType] << endl;
 
-	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 20);
-	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 50);
-	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 100);
+		if (runMS) runExperiments(nodes, nofExperiments, SearchType::MS, genType);
 
-	if (runILS) {
-		ofstream output;
-		output.open(string("results/") + to_string(time(0)) + "_ILS_summary.csv");
-		output << "perturbation,score,cpu_time,wall_time" << endl;
-		for (int i = 2; i <= 10; i++) {
-			auto results = runExperiments(nodes, nofExperiments, SearchType::ILS, i);
-			output << i << "," << summarizeExperiments(results) << endl;
+		if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, genType, 20);
+		if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, genType, 50);
+		if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, genType, 100);
+
+		if (runILS) {
+			ofstream output;
+			output.open(string("results/") + to_string(time(0)) + "_ILS_summary.csv");
+			output << "perturbation,score,cpu_time,wall_time" << endl;
+			for (int i = 2; i <= 10; i++) {
+				auto results = runExperiments(nodes, nofExperiments, SearchType::ILS, genType, i);
+				output << i << "," << summarizeExperiments(results) << endl;
+			}
+			output.close();
+
+			runExperiments(nodes, nofExperiments, SearchType::ILS, genType, 25);
+			runExperiments(nodes, nofExperiments, SearchType::ILS, genType, 50);
+			runExperiments(nodes, nofExperiments, SearchType::ILS, genType, 100);
 		}
-		output.close();
 
-		runExperiments(nodes, nofExperiments, SearchType::ILS, 25);
-		runExperiments(nodes, nofExperiments, SearchType::ILS, 50);
-		runExperiments(nodes, nofExperiments, SearchType::ILS, 100);
+		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 20, 4, 50, 10);
 	}
-
-	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 4, 50, 10);
 
 	#ifdef _WIN64
 		cin.ignore();

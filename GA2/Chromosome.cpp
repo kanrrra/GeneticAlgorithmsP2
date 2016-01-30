@@ -9,6 +9,8 @@
 
 vector<char> Chromosome::defaultDistribution;
 vector<Node> Chromosome::_nodeList;
+
+//const char * GenTypeStrings[] = { "OPTIMAL", "RANDOM", "GREEDY" };
 //int Chromosome::gcrCalls = 0;
 
 vector<char> Chromosome::generateOptimalSolutionForAssignmentData(int size){
@@ -59,12 +61,12 @@ bool Chromosome::checkValidity(){
 	return (count * 2) == _solution.size();
 }
 
-vector<Chromosome> Chromosome::generateRandomPopulation(int populationSize, int solutionSize){
+vector<Chromosome> Chromosome::generateRandomPopulation(int populationSize, int solutionSize, Chromosome::GenerationType genType){
 	vector<Chromosome> population;
 	population.reserve(populationSize);
 
 	for (int i = 0; i < populationSize; i++){
-		population.push_back(Chromosome(solutionSize));
+		population.push_back(Chromosome(solutionSize, genType));
 	}
 
 	return population;

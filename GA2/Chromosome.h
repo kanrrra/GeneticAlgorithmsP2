@@ -17,6 +17,7 @@ public:
 	enum GenerationType {
 		OPTIMAL, RANDOM, GREEDY
 	};
+	//static const char * GenTypeStrings[];
 
 	int _score;
 	vector<char> _solution;
@@ -28,7 +29,7 @@ public:
 
   	void invert();
 
-	static vector<Chromosome> generateRandomPopulation(int populationSize, int solutionSize);
+	static vector<Chromosome> generateRandomPopulation(int populationSize, int solutionSize, GenerationType genType);
 	static vector<Node> _nodeList;
 
   	static vector<Chromosome> GATournamentSelection(vector<Chromosome> population, int tournamentSize, bool shufflePopulation=true);
