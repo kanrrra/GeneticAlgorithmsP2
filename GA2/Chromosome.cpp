@@ -4,6 +4,9 @@
 #include <numeric>
 #include <math.h>
 
+#include <fstream>
+#include <ctime>
+
 vector<char> Chromosome::defaultDistribution;
 vector<Node> Chromosome::_nodeList;
 //int Chromosome::gcrCalls = 0;
@@ -360,6 +363,10 @@ Chromosome Chromosome::GRC() {
 }
 
 vector<char> Chromosome::GRCsolution(double badConnectionWeight) {
+	//ofstream output;
+
+	//output.open(string("results/") + to_string(time(0)) + "_GRCsolution.csv");
+
 
 //	Chromosome::gcrCalls++;
 	int size = _nodeList.size();
@@ -367,8 +374,7 @@ vector<char> Chromosome::GRCsolution(double badConnectionWeight) {
 	int firstPosition = rand() % size;
 	solution[firstPosition] = 1;
 
-	//int selectedCount = 1;
-
+	//swap half of the bits
 	for (int selectedCount = 1; selectedCount < size / 2; selectedCount++){
 		int toSelect = size - selectedCount;
 
@@ -399,35 +405,25 @@ vector<char> Chromosome::GRCsolution(double badConnectionWeight) {
 
 		sort(candidates.begin(), candidates.end(), [](const Candidate & a, const Candidate & b) {return a._score > b._score; });
 
-//		for (auto c : candidates) {
-//			cout << c._score << " ";
-//		}
-//		cout << endl;
-
 		double lowestConnectionCount = candidates[0]._score;
 		
-//		if (partSize == 0) {
-//			partSize = 1;
-//		}
-
 		int partSize;
 		for (partSize = 1; partSize < toSelect; partSize++){
 			if (lowestConnectionCount > candidates[partSize]._score){
 				break;
 			}
 		}
-		/*
-		int partSize = 1;
-		while (lowestConnectionCount == candidates[partSize]._score && partSize < toSelect) {
-			partSize++;
-		}*/
 		int addId = rand() % partSize;
 
-
-
 		solution[candidates[addId]._id] = 1;
+
+		//output << solution << endl;
+
 //		cout << candidates[addId]._id  << " " << candidates[addId]._connections << endl;
 	}
+
+	//output.close();
+
 //
 //	for (char c : solution) {
 //		cout << (int) c;
