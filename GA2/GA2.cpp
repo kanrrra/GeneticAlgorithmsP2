@@ -19,7 +19,7 @@
 using namespace std;
 
 
-const int nofExperiments = 1;
+const int nofExperiments = 30;
 const int nofRestarts = 1000;
 const bool runMS = false;
 const bool runGA = false;
@@ -178,8 +178,9 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 	// - sort ES by score
 
 	for (int gi = 0; gi < globalIter; ++gi) { // or just set time limit
+//		cout << "iteration: " << gi << endl;
 		for (int li = 0; li < localIter; ++li) {
-			cout << "iteration: " << gi << " / " << li << endl;
+//			cout << "iteration: " << gi << " / " << li << endl;
 //			cout << "gcrCalls: " << Chromosome::gcrCalls << endl;
 			// - construct solution
 			Chromosome x = Chromosome::GRC();
@@ -190,8 +191,13 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 			// - get best solution from PR
 			// - local search and save to y
-			Chromosome y = Chromosome::PathRelink(x, es[j]);
+//			Chromosome y = Chromosome::PathRelink(x, es[j]);
+			Chromosome y = Chromosome::GACrossOver(x, es[j]);
 			y.swapNodesOpt();
+
+			if (y._score > x._score) {
+				y = x;
+			}
 
 			if (y._score < es[0]._score) { // - if the solution is better than the best in ES replace it
 				es[0] = y;
@@ -207,6 +213,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 					}
 				}
 				if (addToEs) {
+//					cout << "better ES member recombined" << endl;
 					// find the closest solution in ES (by hamming distance) to y such that score y._score is better
 					int swapId;
 					int swapDistance = numeric_limits<int>::max();;
@@ -225,7 +232,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 				}
 			}
 		}
-		/*
+
 		int map[ESSize][ESSize];
 		for (int k = 0; k < ESSize; ++k) {
 			for (int i = 0; i < ESSize; ++i) {
@@ -248,9 +255,9 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 						map[i][j] = 1;
 					}
 
-					cout << "combining " << i << " " << j << endl;
+//					cout << "combining " << i << " " << j << endl;
 
-					Chromosome y = pathRelink(es[i], es[j], truncate);
+					Chromosome y = Chromosome::GACrossOver(es[i], es[j]);
 					y.swapNodesOpt();
 
 					if (y._score < es[0]._score) { // - if the solution is better than the best in ES replace it
@@ -290,7 +297,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 					}
 				}
 			}
-		}*/
+		}
 	}
 
 //
@@ -300,7 +307,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 	ExperimentResult result;
 	result.bestScore = es[0]._score;
-	cout << "valid: " << es[0] << endl;
+//	cout << "valid: " << es[0] << endl;
 	return result;
 }
 
@@ -408,6 +415,7 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 	vector<ExperimentResult> results;
 
 	for (int i = 0; i < count; ++i) {
+		cout << "RUN: " << i << endl;
 		std::clock_t ms_start = std::clock();
 		auto t1 = chrono::high_resolution_clock::now();
 		ExperimentResult result;
@@ -481,35 +489,35 @@ int main(int argc, char* argv[])
 	Chromosome::_nodeList = nodes;
 
 
-	int better = 0;
-	for (int j = 0; j < 100; ++j) {
-		auto a = Chromosome::GRC();
-		a.swapNodesOpt();
-		auto b = Chromosome::GRC();
-		b.swapNodesOpt();
+//	int better = 0;
+//	for (int j = 0; j < 100; ++j) {
+//		auto a = Chromosome::GRC();
+//		a.swapNodesOpt();
+//		auto b = Chromosome::GRC();
+//		b.swapNodesOpt();
+//
+////		cout << "a: " << a << endl;
+////		cout << "b: " << b << endl << endl;
+//
+////		auto grcSolution = Chromosome::GRC();
+////		cout << grcSolution._score << " " << grcSolution.checkValidity() << endl;
+//		auto prChild = Chromosome::PathRelink(a, b);
+//
+////		cout << endl << prChild << endl;
+////		cout << "valid: " << prChild.checkValidity() << endl;
+////		cout << "score: " << prChild._score << endl;
+//		prChild.swapNodesOpt();
+//		cout << j << ": a=" << a._score << " b=" << b._score << " pr=" << prChild._score << endl;
+//
+//		if (prChild._score < a._score && prChild._score < b._score) {
+//			better++;
+//		}
+//	}
 
-//		cout << "a: " << a << endl;
-//		cout << "b: " << b << endl << endl;
-
-//		auto grcSolution = Chromosome::GRC();
-//		cout << grcSolution._score << " " << grcSolution.checkValidity() << endl;
-		auto prChild = Chromosome::PathRelink(a, b);
-
-//		cout << endl << prChild << endl;
-//		cout << "valid: " << prChild.checkValidity() << endl;
-//		cout << "score: " << prChild._score << endl;
-		prChild.swapNodesOpt();
-		cout << j << ": a=" << a._score << " b=" << b._score << " pr=" << prChild._score << endl;
-
-		if (prChild._score < a._score && prChild._score < b._score) {
-			better++;
-		}
-	}
-
-	cout << "improvement in " << better << " out of 100 cases" << endl;
+//	cout << "improvement in " << better << " out of 100 cases" << endl;
 
 
-	return 0;
+//	return 0;
 
 
 	auto optimalSolution = Chromosome(nodes.size(), Chromosome::OPTIMAL);
@@ -535,7 +543,81 @@ int main(int argc, char* argv[])
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 50);
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 100);
 
-	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 10, 20, 40);
+	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 1);
+
+
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 10);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 40);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 80);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 160);
+//
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 3, 5, 200, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 5, 5, 200, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 10, 5, 200, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 5, 200, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 50, 5, 200, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 100, 5, 200, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 200, 5, 200, 1);
+//
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 3, 5, 200, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 5, 5, 200, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 10, 5, 200, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 5, 200, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 50, 5, 200, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 100, 5, 200, 5);
+
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 3, 5, 200, 10);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 5, 5, 200, 10);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 10, 5, 200, 10);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 10);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 5, 200, 10);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 50, 5, 200, 10);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 100, 5, 200, 10);
+
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 3, 5, 200, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 5, 5, 200, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 10, 5, 200, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 200, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 5, 400, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 50, 5, 200, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 100, 5, 200, 20);
+
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 10, 10, 200, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 10, 200, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 10, 200, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 50, 10, 200, 1);
+//
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 10, 10, 200, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 10, 200, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 10, 200, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 50, 10, 200, 5);
+//
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 10, 10, 200, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 10, 200, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 10, 200, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 50, 10, 200, 20);
+//
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 10, 5, 400, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 400, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 5, 400, 1);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 50, 5, 400, 1);
+//
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 10, 5, 400, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 400, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 5, 400, 5);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 50, 5, 400, 5);
+//
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 10, 5, 400, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 20, 5, 400, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 5, 400, 20);
+//	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 50, 5, 400, 20);
+
+
 
 	#ifdef _WIN64
 		cin.ignore();
