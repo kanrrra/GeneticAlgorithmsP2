@@ -23,6 +23,7 @@ public:
 	vector<char> _solution;
 	vector<char> _scoreContribution;
 
+	vector<char> generateGRCSolution(int size);
 	vector<char> generateRandomSolution(int size);
 	vector<char> generateOptimalSolutionForAssignmentData(int size);
 	bool checkValidity();
@@ -47,7 +48,6 @@ public:
 
 	friend ostream& operator<< (ostream& out, const Chromosome& sol);
 
-  	static Chromosome GRC();
   	static vector<char> GRCsolution(double badConnectionWeight = 0);
 //  	static int gcrCalls;
 

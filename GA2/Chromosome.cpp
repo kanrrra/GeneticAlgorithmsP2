@@ -33,6 +33,52 @@ vector<char> Chromosome::generateOptimalSolutionForAssignmentData(int size){
 	return sol;
 }
 
+vector<char> Chromosome::generateGRCSolution(int size){
+	_solution = vector<char>(size);
+
+	int firstPosition = rand() % size;
+	_solution[firstPosition] = 1;
+
+	calcScore();
+
+	//swap half of the bits
+	for (int selectedCount = 1; selectedCount < size / 2; selectedCount++){
+		int toSelect = size - selectedCount;
+
+		vector<Candidate> candidates(toSelect);
+
+		int canId = 0; // candidate id for the array, may be faster than vectors
+		for (int i = 0; i < size; ++i) {
+			if (_solution[i] == 0) {
+				int connections = _scoreContribution[i];
+
+				candidates[canId]._connections = connections;
+				candidates[canId]._score = connections;
+				candidates[canId]._id = i;
+
+				canId++;
+			}
+		}
+
+		sort(candidates.begin(), candidates.end(), [](const Candidate & a, const Candidate & b) {return a._score > b._score; });
+
+		double lowestConnectionCount = candidates[0]._score;
+
+		int partSize;
+		for (partSize = 1; partSize < toSelect; partSize++){
+			if (lowestConnectionCount > candidates[partSize]._score){
+				break;
+			}
+		}
+		int addId = rand() % partSize;
+
+		flipNodeAtIdx(candidates[addId]._id);
+		//_solution[candidates[addId]._id] = 1;
+	}
+
+	return _solution;
+}
+
 vector<char> Chromosome::generateRandomSolution(int size){
 	if (defaultDistribution.size() != size){
 		vector<char> defaultDistribution0(size / 2, 0);
@@ -236,6 +282,9 @@ int Chromosome::calcScore(){
 	return score;
 }
 
+
+
+
 Chromosome::Chromosome(int size, Chromosome::GenerationType gt)
 {
 	switch (gt)
@@ -248,7 +297,9 @@ Chromosome::Chromosome(int size, Chromosome::GenerationType gt)
 		break;
 	case Chromosome::GREEDY:
 	default:
-		_solution = Chromosome::GRCsolution();
+		_solution = generateGRCSolution(size);
+		return;
+		//_solution = Chromosome::GRCsolution();
 		break;
 	}
 	
@@ -359,10 +410,6 @@ ostream& operator<< (ostream & out, const Chromosome &sol){
 	return out;
 }
 
-Chromosome Chromosome::GRC() {
-	auto solution = Chromosome::GRCsolution();
-	return Chromosome(solution);
-}
 
 vector<char> Chromosome::GRCsolution(double badConnectionWeight) {
 	//ofstream output;
@@ -425,12 +472,6 @@ vector<char> Chromosome::GRCsolution(double badConnectionWeight) {
 	}
 
 	//output.close();
-
-//
-//	for (char c : solution) {
-//		cout << (int) c;
-//	}
-//	cout << endl;
 
 	return solution;
 }

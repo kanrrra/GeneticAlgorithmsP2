@@ -195,7 +195,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 	// - construct elite set (ES) with size b solutions
 	vector<Chromosome> es;
 	for (int i = 0; i < ESSize; ++i) {
-		auto chrom = Chromosome::GRC();
+		auto chrom = Chromosome(Chromosome::_nodeList.size(), Chromosome::GenerationType::GREEDY);
 		chrom.swapNodesOpt();
 		es.push_back(chrom);
 	}
@@ -208,7 +208,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 			cout << "iteration: " << gi << " / " << li << endl;
 //			cout << "gcrCalls: " << Chromosome::gcrCalls << endl;
 			// - construct solution
-			Chromosome x = Chromosome::GRC();
+			Chromosome x = Chromosome(Chromosome::_nodeList.size(), Chromosome::GenerationType::GREEDY);
 			// - local search
 			x.swapNodesOpt();
 			// - random select xj from ES
@@ -530,11 +530,35 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 
 int main(int argc, char* argv[])
 {
-
 	srand (time(NULL));
-
 	vector<Node> nodes = DataReader::GetData("data.txt");
 	Chromosome::_nodeList = nodes;
+
+	ofstream randomTimes;
+	randomTimes.open("results/" + to_string(time(0)) + "randomTimes.csv");
+
+	clock_t ms_start = clock_t();
+	for (int i = 0; i < 10000; i++){
+		randomTimes << Chromosome(nodes.size(), Chromosome::GenerationType::RANDOM)._score << endl;
+	}
+	randomTimes << endl << (double)(clock_t() - ms_start) / CLOCKS_PER_SEC << endl;
+
+	randomTimes.close();
+
+	ofstream greedyTimes;
+	greedyTimes.open("results/" + to_string(time(0)) + "greedyTimes.csv");
+
+	ms_start = clock_t();
+	for (int i = 0; i < 10000; i++){
+		greedyTimes << Chromosome(nodes.size(), Chromosome::GenerationType::GREEDY)._score << endl;
+	}
+	greedyTimes << endl << (double)(clock_t() - ms_start) / CLOCKS_PER_SEC << endl;
+
+	greedyTimes.close();
+	
+	return 1;
+
+
 
 //	auto a = Chromosome::GRC();
 //	auto b = Chromosome::GRC();
