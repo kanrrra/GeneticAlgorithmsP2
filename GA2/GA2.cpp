@@ -534,30 +534,37 @@ int main(int argc, char* argv[])
 	vector<Node> nodes = DataReader::GetData("data.txt");
 	Chromosome::_nodeList = nodes;
 
+	/*
 	ofstream randomTimes;
 	randomTimes.open("results/" + to_string(time(0)) + "randomTimes.csv");
+	int tests = 10000;
 
-	clock_t ms_start = clock_t();
-	for (int i = 0; i < 10000; i++){
-		randomTimes << Chromosome(nodes.size(), Chromosome::GenerationType::RANDOM)._score << endl;
+	clock_t ms_start = clock();
+	for (int i = 0; i < tests; i++){
+		Chromosome test = Chromosome(nodes.size(), Chromosome::GenerationType::RANDOM);
+		test.swapNodesOpt();
+		randomTimes << test._score << endl;
 	}
-	randomTimes << endl << (double)(clock_t() - ms_start) / CLOCKS_PER_SEC << endl;
+	randomTimes << endl << (double)(clock() - ms_start) / CLOCKS_PER_SEC << endl;
 
 	randomTimes.close();
 
 	ofstream greedyTimes;
 	greedyTimes.open("results/" + to_string(time(0)) + "greedyTimes.csv");
 
-	ms_start = clock_t();
-	for (int i = 0; i < 10000; i++){
-		greedyTimes << Chromosome(nodes.size(), Chromosome::GenerationType::GREEDY)._score << endl;
+	ms_start = clock();
+	for (int i = 0; i < tests; i++){
+		Chromosome test = Chromosome(nodes.size(), Chromosome::GenerationType::GREEDY);
+		test.swapNodesOpt();
+		greedyTimes << test._score << endl;
 	}
-	greedyTimes << endl << (double)(clock_t() - ms_start) / CLOCKS_PER_SEC << endl;
+
+	greedyTimes << endl << (double)(clock() - ms_start) / CLOCKS_PER_SEC << endl;
 
 	greedyTimes.close();
 	
 	return 1;
-
+	*/
 
 
 //	auto a = Chromosome::GRC();

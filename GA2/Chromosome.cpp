@@ -76,6 +76,7 @@ vector<char> Chromosome::generateGRCSolution(int size){
 		//_solution[candidates[addId]._id] = 1;
 	}
 
+	_score = accumulate(_scoreContribution.begin(), _scoreContribution.end(), 0) / 2;
 	return _solution;
 }
 
