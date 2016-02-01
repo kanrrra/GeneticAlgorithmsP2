@@ -187,6 +187,7 @@ int Chromosome::swapNodesOpt(){
 }
 
 void Chromosome::flipNodeAtIdx(int idx){
+//	std::clock_t ms_start = std::clock();
 	char myColor = _solution[idx];
 	int scoreChange = 0;
 	for (int n : _nodeList[idx]._links){
@@ -206,6 +207,8 @@ void Chromosome::flipNodeAtIdx(int idx){
 
 	_scoreContribution[idx] = _nodeList[idx]._links.size() - _scoreContribution[idx];
 	_solution[idx] ^= 1;
+//	std::clock_t ms_end = std::clock();
+//	Chromosome::_flipTime +=  1000 * (ms_end - ms_start) / CLOCKS_PER_SEC;
 }
 
 int Chromosome::calcScore(){
@@ -252,7 +255,8 @@ Chromosome::Chromosome(int size, Chromosome::GenerationType gt)
 
 Chromosome::Chromosome(int size)
 {
-	_solution = Chromosome::GRCsolution();
+//	_solution = Chromosome::GRCsolution();
+	_solution = generateRandomSolution(size);
 	_score = calcScore();
 }
 
@@ -475,6 +479,7 @@ Chromosome Chromosome::PathRelink(const Chromosome & a, const Chromosome & guidi
 				Chromosome tmp(current);
 				tmp.flipNodeAtIdx(i);
 //				cout << "found 0 at " << i << endl;
+				vector<int> candidates;
 				for (j = 0; j < size; ++j) {
 					if (i != j && tmp._solution[j] == 1 && tmp._solution[j] != guidingSolution._solution[j]) {
 						Chromosome tmp2(tmp);
@@ -484,10 +489,24 @@ Chromosome Chromosome::PathRelink(const Chromosome & a, const Chromosome & guidi
 							scoreBest = tmp2._score;
 							best = tmp2;
 						}
+
+						candidates.push_back(j);
+
 //						cout << tmp2 << endl;
 //						cout << "found 1 at " << j << endl;
 					}
 				}
+
+//				int ra = rand() % (int)candidates.size();
+//
+//				Chromosome tmp2(tmp);
+//				tmp2.flipNodeAtIdx(ra);
+//
+//				if (tmp2._score < scoreBest) {
+//					scoreBest = tmp2._score;
+//					best = tmp2;
+//				}
+
 			}
 		}
 
@@ -506,6 +525,121 @@ Chromosome Chromosome::PathRelink(const Chromosome & a, const Chromosome & guidi
 //	if (scoreBestOverall > a._score && scoreBestOverall > guidingSolution._score) {
 //		cout << "Better!!" << endl;
 //	}
+	return bestOverall;
+}
+
+
+Chromosome Chromosome::PathRelink2(const Chromosome & a, const Chromosome & guidingSolution) {
+	int distance = Chromosome::distance(a, guidingSolution);
+	int size = a._solution.size();
+
+	Chromosome current(a);
+
+	Chromosome best(a);
+	int scoreBest = best._score;
+
+	Chromosome bestOverall(best);
+	int scoreBestOverall = best._score;
+
+//	cout << distance << endl;
+
+	int bit = 0;
+
+	for (int k = 0; k < distance / 2; ++k) {
+		scoreBest = numeric_limits<int>::max();
+
+//		cout << current << endl;
+
+		int i,j;
+		for (i = 0; i < size; ++i) {
+			if (current._solution[i] == bit && current._solution[i] != guidingSolution._solution[i]) {
+				std::clock_t ms_start = std::clock();
+				Chromosome tmp(current);
+				tmp.flipNodeAtIdx(i);
+				std::clock_t ms_end = std::clock();
+				Chromosome::_flipTime +=  ms_end - ms_start;
+
+
+				if (tmp._score < scoreBest) {
+					scoreBest = tmp._score;
+					best = tmp;
+				}
+
+			}
+		}
+
+		bit ^= 1;
+
+//		cout << "bit: " << bit << endl;
+
+		if (bit == 0 && best._score < scoreBestOverall) {
+			scoreBestOverall = best._score;
+			bestOverall = best;
+		}
+
+		current = best;
+
+//		cout << current << endl;
+	}
+
+//	cout << "valid: " << bestOverall.checkValidity() << endl;
+//
+//	if (scoreBestOverall > a._score && scoreBestOverall > guidingSolution._score) {
+//		cout << "Better!!" << endl;
+//	}
+	return bestOverall;
+}
+
+Chromosome Chromosome::PathRelink3(const Chromosome & a, const Chromosome & guidingSolution) {
+	int distance = Chromosome::distance(a, guidingSolution);
+	int size = a._solution.size();
+
+	Chromosome current(a);
+	Chromosome best(a);
+	int scoreBest = best._score;
+
+	Chromosome bestOverall(best);
+	int scoreBestOverall = best._score;
+
+//	cout << distance << endl;
+
+	int bit = 0;
+
+	for (int k = 0; k < distance / 2; ++k) {
+		scoreBest = numeric_limits<int>::max();
+
+//		cout << current << endl;
+
+		int i,j;
+		for (i = 0; i < size; ++i) {
+			if (current._solution[i] == bit && current._solution[i] != guidingSolution._solution[i]) {
+//				std::clock_t ms_start = std::clock();
+				int tmpScore = current.FakeFlipNodeAtIdx(i);
+				if (tmpScore < scoreBest) {
+					best = current;
+					best.flipNodeAtIdx(i);
+					scoreBest = best._score;
+					if (tmpScore != best._score) {
+						cout << "error" << endl;
+					}
+				}
+//				std::clock_t ms_end = std::clock();
+//				Chromosome::_flipTime +=  ms_end - ms_start;
+			}
+		}
+
+		bit ^= 1;
+
+		if (bit == 0 && best._score < scoreBestOverall) {
+			scoreBestOverall = best._score;
+			bestOverall = best;
+		}
+
+		current = best;
+
+//		cout << current << endl;
+	}
+
 	return bestOverall;
 }
 
@@ -534,3 +668,137 @@ Chromosome Chromosome::PathRelink(const Chromosome & a, const Chromosome & guidi
 //int Chromosome::scoreChange(vector<char> &solution, int idx) {
 //	return 0;
 //}
+Chromosome::~Chromosome() {
+
+}
+
+int Chromosome::FakeFlipNodeAtIdxScoreChange(int idx) {
+	char myColor = _solution[idx];
+	int scoreChange = 0;
+
+	for (int n : _nodeList[idx]._links){
+		if (_solution[n] == myColor){
+			scoreChange++;
+		}
+		else {
+			scoreChange--;
+		}
+	}
+	return scoreChange;
+}
+
+int Chromosome::FakeFlipNodeAtIdx(int idx) {
+	return _score + FakeFlipNodeAtIdxScoreChange(idx);
+}
+
+int Chromosome::FakeFlipNodeAtIdx(int idx, int flipped, int scoreChange) {
+	char myColor = _solution[idx];
+	char flippedColor = _solution[flipped];
+
+//	cout << "flipped " << alreadyFlipped << endl;
+
+	for (int n : _nodeList[idx]._links){
+		if (_solution[n] == myColor){
+			if (flipped == n) {
+				scoreChange--;
+			}
+			else {
+				scoreChange++;
+			}
+		}
+		else {
+			if (flipped == n) {
+				scoreChange++;
+			}
+			else {
+				scoreChange--;
+			}
+		}
+	}
+
+	return _score + scoreChange;
+}
+
+
+Chromosome Chromosome::PathRelink4(const Chromosome & a, const Chromosome & guidingSolution) {
+	int distance = Chromosome::distance(a, guidingSolution);
+	int size = a._solution.size();
+
+	Chromosome current(a);
+
+	Chromosome best(a);
+	int scoreBest = best._score;
+
+	Chromosome bestOverall(best);
+	int scoreBestOverall = best._score;
+
+
+	for (int k = 0; k < distance / 2; ++k) {
+		scoreBest = numeric_limits<int>::max();
+
+//		cout << current << endl;
+
+		int i,j;
+		for (i = 0; i < size; ++i) {
+			if (current._solution[i] == 0 && current._solution[i] != guidingSolution._solution[i]) {
+				int scoreChange = current.FakeFlipNodeAtIdxScoreChange(i);
+//				Chromosome tmp(current);
+//				tmp.flipNodeAtIdx(i);
+//				cout << "found 0 at " << i << endl;
+//				vector<int> candidates;
+
+				std::clock_t ms_start = std::clock();
+
+				for (j = 0; j < size; ++j) {
+					if (i != j && current._solution[j] == 1 && current._solution[j] != guidingSolution._solution[j]) {
+
+						int tmpScore = current.FakeFlipNodeAtIdx(j, i, scoreChange);
+
+						if (tmpScore < scoreBest) {
+							best = current;
+							best.flipNodeAtIdx(i);
+							best.flipNodeAtIdx(j);
+							scoreBest = best._score;
+//							if (tmpScore != best._score) {
+//								cout << "error " << tmpScore << " " << best._score << endl;
+//							}
+						}
+
+//						cout << tmp2 << endl;
+//						cout << "found 1 at " << j << endl;
+					}
+				}
+
+				std::clock_t ms_end = std::clock();
+				Chromosome::_flipTime +=  ms_end - ms_start;
+
+//				int ra = rand() % (int)candidates.size();
+//
+//				Chromosome tmp2(tmp);
+//				tmp2.flipNodeAtIdx(ra);
+//
+//				if (tmp2._score < scoreBest) {
+//					scoreBest = tmp2._score;
+//					best = tmp2;
+//				}
+
+			}
+		}
+
+		if (best._score < scoreBestOverall) {
+			scoreBestOverall = best._score;
+			bestOverall = best;
+		}
+
+		current = best;
+
+//		cout << current << endl;
+	}
+
+//	cout << "valid: " << bestOverall.checkValidity() << endl;
+
+//	if (scoreBestOverall > a._score && scoreBestOverall > guidingSolution._score) {
+//		cout << "Better!!" << endl;
+//	}
+	return bestOverall;
+}

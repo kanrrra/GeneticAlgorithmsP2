@@ -190,7 +190,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 			// - get best solution from PR
 			// - local search and save to y
-			Chromosome y = Chromosome::PathRelink(x, es[j]);
+			Chromosome y = Chromosome::PathRelink3(x, es[j]);
 			y.swapNodesOpt();
 
 			if (y._score < es[0]._score) { // - if the solution is better than the best in ES replace it
@@ -471,7 +471,7 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 
 	return results;
 }
-
+std::clock_t Chromosome::_flipTime = 0;
 int main(int argc, char* argv[])
 {
 
@@ -481,36 +481,69 @@ int main(int argc, char* argv[])
 	Chromosome::_nodeList = nodes;
 
 
-	int better = 0;
-	for (int j = 0; j < 100; ++j) {
-		auto a = Chromosome::GRC();
-		a.swapNodesOpt();
-		auto b = Chromosome::GRC();
-		b.swapNodesOpt();
-
-//		cout << "a: " << a << endl;
-//		cout << "b: " << b << endl << endl;
-
-//		auto grcSolution = Chromosome::GRC();
-//		cout << grcSolution._score << " " << grcSolution.checkValidity() << endl;
-		auto prChild = Chromosome::PathRelink(a, b);
-
-//		cout << endl << prChild << endl;
-//		cout << "valid: " << prChild.checkValidity() << endl;
-//		cout << "score: " << prChild._score << endl;
-		prChild.swapNodesOpt();
-		cout << j << ": a=" << a._score << " b=" << b._score << " pr=" << prChild._score << endl;
-
-		if (prChild._score < a._score && prChild._score < b._score) {
-			better++;
-		}
-	}
-
-	cout << "improvement in " << better << " out of 100 cases" << endl;
-
-
-	return 0;
-
+//
+//	int better = 0;
+//	int valid = 0;
+//	int score = 0;
+//	double improvementsSum = 0;
+//	std::clock_t ms_start = std::clock();
+//	auto t1 = chrono::high_resolution_clock::now();
+//
+//	for (int j = 0; j < 10000; ++j) {
+//		if (j % 10 == 0) {
+//			cout << j << endl;
+//		}
+////		auto a = Chromosome::GRC();
+//		Chromosome a(Chromosome::_nodeList.size(), Chromosome::RANDOM);
+//		a.swapNodesOpt();
+////		auto b = Chromosome::GRC();
+//		Chromosome b(Chromosome::_nodeList.size(), Chromosome::RANDOM);
+//		b.swapNodesOpt();
+//
+////		cout << "a: " << a << endl;
+////		cout << "b: " << b << endl << endl;
+//
+////		auto grcSolution = Chromosome::GRC();
+////		cout << grcSolution._score << " " << grcSolution.checkValidity() << endl;
+//		auto prChild = Chromosome::PathRelink3(a, b);
+//
+////		cout << endl << prChild << endl;
+////		cout << "valid: " << prChild.checkValidity() << endl;
+////		cout << "score: " << prChild._score << endl;
+//		if (prChild.checkValidity()) {
+//			valid++;
+//		}
+//		else {
+////			cout << prChild << endl;
+//		}
+//		prChild.swapNodesOpt();
+//		score += prChild._score;
+////		cout << j << ": a=" << a._score << " b=" << b._score << " pr=" << prChild._score << endl;
+//
+//		if (prChild._score < a._score && prChild._score < b._score) {
+//			better++;
+//			if (a._score < b._score) {
+//				improvementsSum += a._score - prChild._score;
+//			}
+//			else {
+//				improvementsSum += b._score - prChild._score;
+//			}
+//		}
+//	}
+//
+//	std::clock_t ms_end = std::clock();
+//	auto t2 = chrono::high_resolution_clock::now();
+//
+//	std::clock_t cpuTime = 1000.0 * (ms_end - ms_start) / CLOCKS_PER_SEC;
+////	result.wallTime = chrono::duration_cast<chrono::milliseconds>(t2 - t1);
+//
+//	cout << "improvement in " << better << " out of 1000 cases" << " average: " << improvementsSum / better << endl;
+//	cout << "valids " << valid << endl;
+//	cout << "cpu time: " << cpuTime << endl;
+//	cout << "flip time: " << 1000 * Chromosome::_flipTime / CLOCKS_PER_SEC << endl;
+//	cout << "scores: " << (double) score / 1000 << endl;
+//
+//	return 0;
 
 	auto optimalSolution = Chromosome(nodes.size(), Chromosome::OPTIMAL);
 	cout << "Optimal soution of provided graph: " << optimalSolution._score << " isValid: " << optimalSolution.checkValidity() << endl;
@@ -535,7 +568,7 @@ int main(int argc, char* argv[])
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 50);
 	if (runGA) runExperiments(nodes, nofExperiments, SearchType::GA, 100);
 
-	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 10, 20, 40);
+	if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, 30, 5, 200, 10);
 
 	#ifdef _WIN64
 		cin.ignore();

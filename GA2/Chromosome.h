@@ -18,6 +18,8 @@ public:
 		OPTIMAL, RANDOM, GREEDY
 	};
 
+
+
 	int _score;
 	vector<char> _solution;
 	vector<char> _scoreContribution;
@@ -35,12 +37,20 @@ public:
   	static vector<Chromosome> GAGenerateChildren(vector<Chromosome> parentsA, vector<Chromosome> parentsB);
   	static Chromosome GACrossOver(Chromosome parentA, Chromosome parentB);
   	static Chromosome PathRelink(const Chromosome & a, const Chromosome & b);
+  	static Chromosome PathRelink2(const Chromosome & a, const Chromosome & b);
+  	static Chromosome PathRelink3(const Chromosome & a, const Chromosome & b);
+  	static Chromosome PathRelink4(const Chromosome & a, const Chromosome & b);
+  	static std::clock_t _flipTime;
 
 	void flipNodeAtIdx(int idx);
+	int FakeFlipNodeAtIdx(int idx);
+  	int FakeFlipNodeAtIdx(int idx, int alreadyFlipped, int scoreChange);
+  	int FakeFlipNodeAtIdxScoreChange(int idx);
 	int swapNodesOpt();
 	int mutate(unsigned int perturbationSize);
 
   	Chromosome(int size);
+  ~Chromosome();
 	Chromosome(int size, Chromosome::GenerationType gt);
 	Chromosome(const Chromosome & b);
 	Chromosome(vector<char> & solution);
