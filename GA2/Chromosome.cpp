@@ -482,10 +482,76 @@ Chromosome::Chromosome(const Chromosome &b) {
 	_scoreContribution = b._scoreContribution;
 }
 
-int Chromosome::distance(Chromosome &a, Chromosome &b) {
+int Chromosome::distance(const Chromosome &a, const Chromosome &b) {
 	int distance = 0;
 	for (int j = 0; j < a._solution.size(); ++j) {
 		distance += a._solution[j] != b._solution[j];
 	}
 	return distance;
+}
+
+int Chromosome::FakeFlipNodeAtIdxScoreChange(int idx) {
+	char myColor = _solution[idx];
+	int scoreChange = 0;
+
+	for (int n : _nodeList[idx]._links){
+		if (_solution[n] == myColor){
+			scoreChange++;
+		}
+		else {
+			scoreChange--;
+		}
+	}
+	return scoreChange;
+}
+
+int Chromosome::FakeFlipNodeAtIdx(int idx) {
+	return _score + FakeFlipNodeAtIdxScoreChange(idx);
+}
+
+Chromosome Chromosome::PathRelink(const Chromosome & a, const Chromosome & guidingSolution) {
+	int distance = Chromosome::distance(a, guidingSolution);
+	int size = a._solution.size();
+
+	Chromosome current(a);
+	Chromosome best(a);
+	int scoreBest = best._score;
+
+	Chromosome bestOverall(best);
+	int scoreBestOverall = best._score;
+
+	int bit = 0;
+
+	for (int k = 0; k < distance / 2; ++k) {
+		scoreBest = numeric_limits<int>::max();
+
+		int i,j;
+		for (i = 0; i < size; ++i) {
+			if (current._solution[i] == bit && current._solution[i] != guidingSolution._solution[i]) {
+//				std::clock_t ms_start = std::clock();
+				int tmpScore = current.FakeFlipNodeAtIdx(i);
+				if (tmpScore < scoreBest) {
+					best = current;
+					best.flipNodeAtIdx(i);
+					scoreBest = best._score;
+					if (tmpScore != best._score) {
+						cout << "error" << endl;
+					}
+				}
+//				std::clock_t ms_end = std::clock();
+//				Chromosome::_flipTime +=  ms_end - ms_start;
+			}
+		}
+
+		bit ^= 1;
+
+		if (bit == 0 && best._score < scoreBestOverall) {
+			scoreBestOverall = best._score;
+			bestOverall = best;
+		}
+
+		current = best;
+	}
+
+	return bestOverall;
 }
