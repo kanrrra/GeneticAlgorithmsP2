@@ -22,6 +22,7 @@
 using namespace std;
 
 const int MAX_TIME = 30;
+const int ONE_THREAD = true;
 
 const int nofExperiments = 30;
 const int nofRestarts = 10;
@@ -191,11 +192,11 @@ Chromosome pathRelink(Chromosome a, Chromosome b, double truncate = 1) {
 	return steps[minId];*/
 }
 
-ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter, int dth = 20, double truncate = 1, time_t maxTime = MAX_TIME) {
+ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter, int dth, Chromosome::GenerationType genType, double truncate = 1, time_t maxTime = MAX_TIME) {
 	// - construct elite set (ES) with size b solutions
 	vector<Chromosome> es;
 	for (int i = 0; i < ESSize; ++i) {
-		Chromosome chrom(Chromosome::_nodeList.size(), Chromosome::GREEDY);
+		Chromosome chrom(Chromosome::_nodeList.size(), genType);
 		chrom.swapNodesOpt();
 		es.push_back(chrom);
 	}
@@ -214,7 +215,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 //			cout << "iteration: " << gi << " / " << li << endl;
 //			cout << "gcrCalls: " << Chromosome::gcrCalls << endl;
 			// - construct solution
-			Chromosome x(Chromosome::_nodeList.size(), Chromosome::GREEDY);
+			Chromosome x(Chromosome::_nodeList.size(), genType);
 
 			// - local search
 			x.swapNodesOpt();
@@ -224,7 +225,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 			// - get best solution from PR
 			// - local search and save to y
 //			Chromosome y = Chromosome::PathRelink(x, es[j]);
-			Chromosome y = Chromosome::GACrossOver(x, es[j]);
+			Chromosome y = Chromosome::PathRelink(x, es[j]);
 			y.swapNodesOpt();
 
 			if (y._score > x._score) {
@@ -289,7 +290,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 //					cout << "combining " << i << " " << j << endl;
 
-					Chromosome y = Chromosome::GACrossOver(es[i], es[j]);
+					Chromosome y = Chromosome::PathRelink(es[i], es[j]);
 					y.swapNodesOpt();
 
 					if (y._score < es[0]._score) { // - if the solution is better than the best in ES replace it
@@ -484,7 +485,7 @@ ExperimentResult runExperiment(int size, SearchType type, Chromosome::Generation
 		break;
 	case SearchType::PR:
 		//cout << "running PR " << i << ":" << p1 << ":" << p2 << ":" << p3 << ":" << p4 << endl;
-		result = dynamicPathRelinking(p1, p2, p3, p4);
+		result = dynamicPathRelinking(p1, p2, p3, p4, genType);
 		break;
 	}
 	std::clock_t ms_end = std::clock();
@@ -502,8 +503,14 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 
 	vector<ExperimentResult> results;
 	int nodesSize = nodes.size();
-	
-	int nofThreads = max((unsigned int)1, std::thread::hardware_concurrency() - 1);
+
+	int nofThreads;
+	if (ONE_THREAD) {
+		nofThreads = 1;
+	}
+	else {
+		nofThreads = max((unsigned int)1, std::thread::hardware_concurrency() - 1);
+	}
 	vector<future<ExperimentResult>> futures(nofThreads);
 	
 	int experimentsRun = 0;
@@ -580,7 +587,13 @@ int main(int argc, char* argv[])
 			runExperiments(nodes, nofExperiments, SearchType::ILS, genType, 100);
 		}
 
-		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 30, 5, 200, 10);
+		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 3, 5, 200, 1);
+		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 5, 5, 200, 1);
+		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 10, 5, 200, 1);
+		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 20, 5, 200, 1);
+		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 30, 5, 200, 1);
+//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 50, 5, 200, 1); // todo run
+//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 100, 5, 200, 1); // todo run
 	}
 
 	#ifdef _WIN64
