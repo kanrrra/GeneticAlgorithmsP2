@@ -21,8 +21,8 @@
 
 using namespace std;
 
-const int MAX_TIME = 30;
-const int ONE_THREAD = true;
+const int MAX_TIME = 45;
+const int ONE_THREAD = false;
 
 const int nofExperiments = 30;
 const int nofRestarts = 10;
@@ -224,11 +224,11 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 			// - get best solution from PR
 			// - local search and save to y
-//			Chromosome y = Chromosome::PathRelink(x, es[j]);
 			Chromosome y = Chromosome::PathRelink(x, es[j]);
+//			Chromosome y = Chromosome::GACrossOver(x, es[j]);
 			y.swapNodesOpt();
 
-			if (y._score > x._score) {
+			if (y._score > x._score) { //uncomment for GACrossover
 				y = x;
 			}
 
@@ -587,13 +587,16 @@ int main(int argc, char* argv[])
 			runExperiments(nodes, nofExperiments, SearchType::ILS, genType, 100);
 		}
 
-		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 3, 5, 200, 1);
-		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 5, 5, 200, 1);
-		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 10, 5, 200, 1);
-		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 20, 5, 200, 1);
-		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 30, 5, 200, 1);
-//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 50, 5, 200, 1); // todo run
-//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 100, 5, 200, 1); // todo run
+//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 3, 5, 200, 1);
+//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 5, 5, 200, 1);
+//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 10, 5, 200, 1);
+//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 20, 5, 200, 1);
+//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 30, 5, 200, 10);
+//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 50, 5, 200, 1); // todo run solo
+//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 100, 5, 200, 1); // todo run solo
+
+		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 30, 1000, 200, 10);
+
 	}
 
 	#ifdef _WIN64
