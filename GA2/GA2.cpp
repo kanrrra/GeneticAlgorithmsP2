@@ -21,14 +21,14 @@
 
 using namespace std;
 
-const int MAX_TIME = 30;
+int MAX_TIME = -1;
+int MAX_ITER = 1000;
 
 const int nofExperiments = 30;
-const int nofRestarts = 10;
-const bool runMS = false;
+const bool runMS = true;
 const bool runGA = false;
-const bool runILS = false;
-const bool runPR = true;
+const bool runILS = true;
+const bool runPR = false;
 
 enum SearchType {
   MS, ILS, GA, PR
@@ -208,7 +208,8 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 		endTime = numeric_limits<long>::max();
 	}
 
-	for (int gi = 0; gi < globalIter && time(0) < endTime; ++gi) { // or just set time limit
+	int gi;
+	for (gi = 0; gi < globalIter && time(0) < endTime; ++gi) { // or just set time limit
 //		cout << "iteration: " << gi << endl;
 		for (int li = 0; li < localIter; ++li) {
 //			cout << "iteration: " << gi << " / " << li << endl;
@@ -339,6 +340,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 	ExperimentResult result;
 	result.bestScore = es[0]._score;
+	result.iterations = gi;
 //	cout << "valid: " << es[0] << endl;
 	return result;
 }
@@ -468,7 +470,7 @@ ExperimentResult runExperiment(int size, SearchType type, Chromosome::Generation
 	switch (type) {
 	case SearchType::MS:
 		//cout << "running MS " << i << endl;
-		result = multiStart(size, genType, -1, MAX_TIME);
+		result = multiStart(size, genType, MAX_ITER, MAX_TIME);
 		break;
 	case SearchType::ILS:
 		if (p1 == -1){
@@ -476,7 +478,7 @@ ExperimentResult runExperiment(int size, SearchType type, Chromosome::Generation
 		}
 
 		//cout << "running ILS " << i << " and " << p1 << endl;
-		result = iterativeLocalSearch(size, p1, genType, -1, MAX_TIME);
+		result = iterativeLocalSearch(size, p1, genType, MAX_ITER, MAX_TIME);
 		break;
 	case SearchType::GA:
 		//cout << "running GA " << i << " and " << p1 << endl;
@@ -542,6 +544,10 @@ vector<ExperimentResult> runExperiments(vector<Node> nodes, int count, SearchTyp
 
 int main(int argc, char* argv[])
 {
+	if (argc > 1){
+		MAX_TIME = atoi(argv[1]);
+	}
+
 	srand (time(NULL));
 	vector<Node> nodes = DataReader::GetData("data.txt");
 	Chromosome::_nodeList = nodes;
@@ -555,7 +561,7 @@ int main(int argc, char* argv[])
 	optimalSolutionFile << optimalSolution;
 	optimalSolutionFile.close();
 
-	vector<Chromosome::GenerationType> genTypes = {Chromosome::GenerationType::GREEDY /*Chromosome::GenerationType::RANDOM*/ };
+	vector<Chromosome::GenerationType> genTypes = {Chromosome::GenerationType::GREEDY, Chromosome::GenerationType::RANDOM};
 	for (auto genType : genTypes){
 		cout << "using genType: " << GenTypeStrings[genType] << endl;
 
@@ -569,10 +575,12 @@ int main(int argc, char* argv[])
 			ofstream output;
 			output.open(string("results/") + to_string(time(0)) + "_ILS_summary.csv");
 			output << "perturbation,score,cpu_time,wall_time" << endl;
-			for (int i = 2; i <= 10; i++) {
+			int i;
+			for (i = 2; i <= 10; i++) {
 				auto results = runExperiments(nodes, nofExperiments, SearchType::ILS, genType, i);
 				output << i << "," << summarizeExperiments(results) << endl;
 			}
+
 			output.close();
 
 			runExperiments(nodes, nofExperiments, SearchType::ILS, genType, 25);

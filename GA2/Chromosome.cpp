@@ -85,6 +85,7 @@ vector<char> Chromosome::generateRandomSolution(int size){
 		vector<char> defaultDistribution0(size / 2, 0);
 		vector<char> defaultDistribution1(size / 2, 1);
 
+		defaultDistribution.clear();
 		defaultDistribution.reserve(size);
 
 		defaultDistribution.insert(defaultDistribution.end(), defaultDistribution0.begin(), defaultDistribution0.end());
@@ -320,6 +321,8 @@ Chromosome::Chromosome(vector<char> & solution)
 }
 
 vector<Chromosome> Chromosome::GATournamentSelection(vector<Chromosome> population, int tournamentSize, bool shufflePopulation) {
+	if (population.size() == 0) throw runtime_error("Population has a size of 0");
+
 	if (shufflePopulation)
 		random_shuffle(population.begin(), population.end());
 
