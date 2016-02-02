@@ -226,8 +226,8 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 			// - get best solution from PR
 			// - local search and save to y
-			Chromosome y = Chromosome::PathRelink(x, es[j]);
-//			Chromosome y = Chromosome::GACrossOver(x, es[j]);
+//			Chromosome y = Chromosome::PathRelink(x, es[j]);
+			Chromosome y = Chromosome::GACrossOver(x, es[j]);
 			y.swapNodesOpt();
 
 			if (y._score > x._score) { //uncomment for GACrossover
@@ -292,7 +292,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 //					cout << "combining " << i << " " << j << endl;
 
-					Chromosome y = Chromosome::PathRelink(es[i], es[j]);
+					Chromosome y = Chromosome::GACrossOver(es[i], es[j]);
 					y.swapNodesOpt();
 
 					if (y._score < es[0]._score) { // - if the solution is better than the best in ES replace it
