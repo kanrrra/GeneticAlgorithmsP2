@@ -22,7 +22,7 @@
 using namespace std;
 
 int MAX_TIME = -1;
-int MAX_ITER = 1000;
+int MAX_ITER = -1;
 
 const int ONE_THREAD = false;
 
@@ -554,7 +554,7 @@ int main(int argc, char* argv[])
 {
 	Chromosome::GenerationType genType = Chromosome::GenerationType::GREEDY;
 	if (argc > 1){
-		if (argv[1] == "greedy")
+		if (string(argv[1]) == "greedy")
 			genType = Chromosome::GenerationType::GREEDY;
 		else {
 			genType = Chromosome::GenerationType::RANDOM;
