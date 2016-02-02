@@ -27,10 +27,10 @@ int MAX_ITER = -1;
 const int ONE_THREAD = false;
 
 const int nofExperiments = 30;
-const bool runMS = true;
-const bool runGA = true;
-const bool runILS = true;
-const bool runPR = false;
+const bool runMS = false;
+const bool runGA = false;
+const bool runILS = false;
+const bool runPR = true;
 
 enum SearchType {
   MS, ILS, GA, PR
@@ -226,13 +226,13 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 			// - get best solution from PR
 			// - local search and save to y
-//			Chromosome y = Chromosome::PathRelink(x, es[j]);
-			Chromosome y = Chromosome::GACrossOver(x, es[j]);
+			Chromosome y = Chromosome::PathRelink(x, es[j]);
+//			Chromosome y = Chromosome::GACrossOver(x, es[j]);
 			y.swapNodesOpt();
 
-			if (y._score > x._score) { //uncomment for GACrossover
-				y = x;
-			}
+//			if (y._score > x._score) { //uncomment for GACrossover
+//				y = x;
+//			}
 
 			if (y._score < es[0]._score) { // - if the solution is better than the best in ES replace it
 				es[0] = y;
@@ -292,7 +292,7 @@ ExperimentResult dynamicPathRelinking(int ESSize, int globalIter, int localIter,
 
 //					cout << "combining " << i << " " << j << endl;
 
-					Chromosome y = Chromosome::GACrossOver(es[i], es[j]);
+					Chromosome y = Chromosome::PathRelink(es[i], es[j]);
 					y.swapNodesOpt();
 
 					if (y._score < es[0]._score) { // - if the solution is better than the best in ES replace it
@@ -613,7 +613,11 @@ int main(int argc, char* argv[])
 //		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 50, 5, 200, 1); // todo run solo
 //		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 100, 5, 200, 1); // todo run solo
 
-		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, genType, 30, 1000, 200, 10);
+//		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, Chromosome::GenerationType::GREEDY, 30, 5, 200, 10);
+
+		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, Chromosome::GenerationType::GREEDY, 50, 5, 200, 1);
+		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, Chromosome::GenerationType::GREEDY, 100, 5, 200, 1);
+		if (runPR) runExperiments(nodes, nofExperiments, SearchType::PR, Chromosome::GenerationType::GREEDY, 200, 5, 200, 1);
 
 	//}
 
